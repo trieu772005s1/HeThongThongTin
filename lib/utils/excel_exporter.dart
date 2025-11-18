@@ -1,11 +1,21 @@
 import 'dart:io';
 import 'package:excel/excel.dart';
+import 'package:fl_credit/models/loan.dart';
+import 'package:intl/intl.dart';
+import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 
-Future<void> exportLoanReportToExcel() async {
+Future<void> exportLoanReportToExcel(List<Loan> loans) async {
   final excel = Excel.createExcel();
   final Sheet sheet = excel['Báo cáo vay'];
 
+  final dateNow = DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now());
+
+  sheet.appendRow([TextCellValue('BÁO CÁO DANH SÁCH KHOẢN VAY')]);
+  sheet.appendRow([TextCellValue('Ngày tạo: $dateNow')]);
+  sheet.appendRow([]);
+
+  // Header
   sheet.appendRow([
     TextCellValue('STT'),
     TextCellValue('Mã HĐ'),
@@ -14,32 +24,27 @@ Future<void> exportLoanReportToExcel() async {
     TextCellValue('Trạng thái'),
   ]);
 
-  sheet.appendRow([
-    TextCellValue('1'),
-    TextCellValue('HD12345'),
-    TextCellValue('5.000.000đ'),
-    TextCellValue('01/11/2025'),
-    TextCellValue('Đang hoạt động'),
-  ]);
-  sheet.appendRow([
-    TextCellValue('2'),
-    TextCellValue('HD67890'),
-    TextCellValue('10.000.000đ'),
-    TextCellValue('05/10/2025'),
-    TextCellValue('Đã tất toán'),
-  ]);
-
-  final Directory dir = await getApplicationDocumentsDirectory();
-  final String filePath = '${dir.path}/bao_cao_khoan_vay.xlsx';
-
-  final List<int>? bytes = excel.encode();
-  if (bytes == null) {
-    return;
+  // Dữ liệu
+  for (int i = 0; i < loans.length; i++) {
+    final loan = loans[i];
+    sheet.appendRow([
+      TextCellValue('${i + 1}'),
+      TextCellValue(loan.id),
+      TextCellValue('${NumberFormat('#,###', 'vi_VN').format(loan.amount)}đ'),
+      TextCellValue(loan.disbursementDate),
+      TextCellValue(loan.status),
+    ]);
   }
 
-  final File file = File(filePath)
+  final dir = await getApplicationDocumentsDirectory();
+  final filePath = '${dir.path}/bao_cao_khoan_vay.xlsx';
+
+  final bytes = excel.encode();
+  if (bytes == null) return;
+
+  final file = File(filePath)
     ..createSync(recursive: true)
     ..writeAsBytesSync(bytes);
 
-  print('Đã xuất file Excel tại: $filePath');
+  await OpenFile.open(filePath);
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_credit/utils/excel_exporter.dart';
+import 'package:fl_credit/models/loan.dart';
+import 'package:fl_credit/pages/contract/contract_detail_page.dart';
 
 class CustomerDashboard extends StatelessWidget {
   const CustomerDashboard({super.key});
@@ -8,12 +10,31 @@ class CustomerDashboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final NumberFormat fmt = NumberFormat('#,###', 'vi_VN');
-    final int totalDebt = 25000000;
-    final int paidCycles = 4;
 
-    final String currentContractId = '#12345';
-    final int currentLoanAmount = 5000000;
-    final String nextDueDate = '20/11/2025';
+    final int totalDebt = 25000000;
+
+    // Mẫu hợp đồng đang sử dụng
+    final Loan currentLoan = Loan(
+      id: 'HD12345',
+      amount: 5000000,
+      disbursementDate: '01/11/2025',
+      status: 'Đang hoạt động',
+      paidCycles: 2,
+      totalCycles: 12,
+    );
+
+    // Danh sách khoản vay để xuất báo cáo
+    final List<Loan> loans = [
+      currentLoan,
+      Loan(
+        id: 'HD67890',
+        amount: 10000000,
+        disbursementDate: '05/10/2025',
+        status: 'Đã tất toán',
+        paidCycles: 12,
+        totalCycles: 12,
+      ),
+    ];
 
     return Scaffold(
       appBar: AppBar(
@@ -47,17 +68,11 @@ class CustomerDashboard extends StatelessWidget {
             _buildSummaryCard(fmt, totalDebt),
             const SizedBox(height: 24),
             _sectionTitle('Hợp đồng đang sử dụng'),
-            _buildUseContract(
-              fmt,
-              currentContractId,
-              currentLoanAmount,
-              nextDueDate,
-              paidCycles,
-            ),
+            _buildUseContract(context, fmt, currentLoan),
             const SizedBox(height: 24),
             _buildRepaymentButton(context),
             const SizedBox(height: 12),
-            _buildExportButton(context),
+            _buildExportButton(context, loans),
           ],
         ),
       ),
@@ -106,23 +121,25 @@ class CustomerDashboard extends StatelessWidget {
     );
   }
 
-  Widget _buildUseContract(
-    NumberFormat fmt,
-    String contractId,
-    int amount,
-    String dueDate,
-    int paidCycles,
-  ) {
+  Widget _buildUseContract(BuildContext context, NumberFormat fmt, Loan loan) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
         leading: const Icon(Icons.assignment, color: Colors.green),
-        title: Text('Hợp đồng $contractId'),
+        title: Text('Hợp đồng ${loan.id}'),
         subtitle: Text(
-          'Thanh toán: ${fmt.format(amount)}đ - $dueDate\nKỳ đã trả: $paidCycles',
+          'Thanh toán: ${fmt.format(loan.amount)}đ - ${loan.disbursementDate}\n'
+          'Kỳ đã trả: ${loan.paidCycles}/${loan.totalCycles}',
         ),
         trailing: const Icon(Icons.arrow_forward_ios),
-        onTap: () {},
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ContractDetailPage(loan: loan),
+            ),
+          );
+        },
       ),
     );
   }
@@ -154,12 +171,12 @@ class CustomerDashboard extends StatelessWidget {
     );
   }
 
-  Widget _buildExportButton(BuildContext context) {
+  Widget _buildExportButton(BuildContext context, List<Loan> loans) {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
         onPressed: () async {
-          await exportLoanReportToExcel();
+          await exportLoanReportToExcel(loans);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Xuất báo cáo Excel thành công')),
           );
