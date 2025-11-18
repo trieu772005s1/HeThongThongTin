@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fl_credit/services/auth_service.dart'; // THÊM DÒNG NÀY
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -15,10 +16,33 @@ class _RegisterPageState extends State<RegisterPage> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  void _submit() {
-    if (_formKey.currentState!.validate()) {
-      // Xử lý đăng ký
-      Navigator.pushReplacementNamed(context, '/home');
+  final _authService = AuthService(); // THÊM
+  bool _isLoading = false; // THÊM
+
+  Future<void> _submit() async {
+    if (_formKey.currentState!.validate() == false) return;
+
+    setState(() => _isLoading = true);
+    try {
+      await _authService.signUpWithEmail(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Đăng ký thành công')));
+
+      Navigator.pushReplacementNamed(context, '/');
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -93,17 +117,29 @@ class _RegisterPageState extends State<RegisterPage> {
                               : null,
                         ),
                         const SizedBox(height: 16),
+                        // ===== EMAIL FIELD ĐÃ SỬA Ở ĐÂY =====
                         TextFormField(
                           controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
                           style: const TextStyle(color: Colors.black),
                           decoration: InputDecoration(
                             labelText: 'Email',
                             prefixIcon: const Icon(Icons.email),
                             border: inputBorder,
                           ),
-                          validator: (value) => value == null || value.isEmpty
-                              ? 'Vui lòng nhập email'
-                              : null,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Vui lòng nhập email';
+                            }
+                            final email = value.trim();
+                            final emailRegex = RegExp(
+                              r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
+                            );
+                            if (!emailRegex.hasMatch(email)) {
+                              return 'Email không hợp lệ';
+                            }
+                            return null;
+                          },
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
@@ -157,7 +193,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            onPressed: _submit,
+                            onPressed: _isLoading ? null : _submit,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF1976D2),
                               padding: const EdgeInsets.symmetric(vertical: 14),
@@ -165,13 +201,22 @@ class _RegisterPageState extends State<RegisterPage> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            child: const Text(
-                              'Đăng ký',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.white,
-                              ),
-                            ),
+                            child: _isLoading
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Text(
+                                    'Đăng ký',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                           ),
                         ),
                         const SizedBox(height: 12),

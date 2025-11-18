@@ -5,7 +5,15 @@ import 'package:fl_credit/pages/login_page.dart';
 import 'package:fl_credit/pages/register_screen.dart';
 import 'package:fl_credit/theme/app_theme.dart';
 
-void main() {
+// THÊM 2 DÒNG NÀY
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+
+void main() async {
+  // THÊM 3 DÒNG NÀY
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   runApp(const MyApp());
 }
 

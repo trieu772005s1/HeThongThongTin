@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fl_credit/services/auth_service.dart'; // THÊM DÒNG NÀY
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -115,6 +116,9 @@ class ProfilePage extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         children: items.map((item) {
+          final String title = item['title'] as String;
+          final bool isLogout = title == 'Đăng xuất';
+
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Container(
@@ -129,9 +133,23 @@ class ProfilePage extends StatelessWidget {
                   vertical: 12,
                 ),
                 leading: Icon(item['icon'] as IconData, color: Colors.blue),
-                title: Text(item['title'] as String),
+                title: Text(title),
                 trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                onTap: () {},
+                onTap: () async {
+                  if (isLogout) {
+                    // ĐĂNG XUẤT
+                    await AuthService().signOut();
+                    if (!context.mounted) return;
+                    // Xóa hết stack, quay về màn login ('/')
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      '/',
+                      (route) => false,
+                    );
+                  } else {
+                    // Sau này bạn xử lý các menu khác ở đây
+                  }
+                },
               ),
             ),
           );
