@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_credit/services/auth_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -35,8 +37,29 @@ class _LoginPageState extends State<LoginPage> {
 
       if (!mounted) return;
 
-      // Đăng nhập thành công → vào trang chủ
-      Navigator.pushReplacementNamed(context, '/home');
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw 'Không tìm thấy user sau khi đăng nhập';
+      }
+
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      final data = doc.data();
+      final role = data?['role'] ?? 'customer';
+
+      String route;
+      if (role == 'admin') {
+        route = '/adminHome';
+      } else if (role == 'staff') {
+        route = '/staffHome';
+      } else {
+        route = '/home'; // customer
+      }
+
+      Navigator.pushReplacementNamed(context, route);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -44,6 +67,30 @@ class _LoginPageState extends State<LoginPage> {
       ).showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _resetPassword() async {
+    final email = _emailController.text.trim();
+
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng nhập email trước')),
+      );
+      return;
+    }
+
+    try {
+      await _authService.sendPasswordResetEmail(email);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Đã gửi email đặt lại mật khẩu')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
     }
   }
 
@@ -173,7 +220,12 @@ class _LoginPageState extends State<LoginPage> {
                                   ),
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 8),
+                        TextButton(
+                          onPressed: _resetPassword,
+                          child: const Text('Quên mật khẩu?'),
+                        ),
+                        const SizedBox(height: 8),
                         TextButton(
                           onPressed: () {
                             Navigator.pushNamed(context, '/register');

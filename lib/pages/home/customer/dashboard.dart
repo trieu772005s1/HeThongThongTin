@@ -3,6 +3,9 @@ import 'package:intl/intl.dart';
 import 'package:fl_credit/utils/excel_exporter.dart';
 import 'package:fl_credit/models/loan.dart';
 import 'package:fl_credit/pages/contract/contract_detail_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // để dùng DocumentSnapshot
+import 'package:fl_credit/services/firestore_service.dart';
 
 class CustomerDashboard extends StatelessWidget {
   const CustomerDashboard({super.key});
@@ -40,14 +43,7 @@ class CustomerDashboard extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFF1976D2),
         elevation: 0,
-        title: const Text(
-          'Xin chào, Triệu!',
-          style: TextStyle(
-            fontSize: 22,
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        title: _buildGreeting(),
         centerTitle: false,
         actions: [
           IconButton(
@@ -83,6 +79,40 @@ class CustomerDashboard extends StatelessWidget {
     return Text(
       title,
       style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    );
+  }
+
+  Widget _buildGreeting() {
+    final user = FirebaseAuth.instance.currentUser;
+
+    const baseStyle = TextStyle(
+      fontSize: 22,
+      color: Colors.white,
+      fontWeight: FontWeight.bold,
+    );
+
+    // Nếu chưa đăng nhập, hiện mặc định
+    if (user == null) {
+      return const Text('Xin chào!', style: baseStyle);
+    }
+
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: FirestoreService().userProfileStream(user.uid),
+      builder: (context, snapshot) {
+        String name = 'bạn';
+
+        if (snapshot.hasData && snapshot.data!.data() != null) {
+          final data = snapshot.data!.data()!;
+          final fullName = (data['fullName'] ?? '') as String;
+
+          if (fullName.isNotEmpty) {
+            // Lấy từ cuối cùng làm tên: "Trần Tuấn Triệu" -> "Triệu"
+            name = fullName.split(' ').last;
+          }
+        }
+
+        return Text('Xin chào, $name!', style: baseStyle);
+      },
     );
   }
 

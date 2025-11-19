@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:fl_credit/services/auth_service.dart'; // THÊM DÒNG NÀY
+import 'package:fl_credit/services/auth_service.dart';
+import 'package:fl_credit/services/firestore_service.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -16,17 +17,32 @@ class _RegisterPageState extends State<RegisterPage> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  final _authService = AuthService(); // THÊM
-  bool _isLoading = false; // THÊM
+  final _authService = AuthService();
+  final _firestoreService = FirestoreService(); // THÊM DÒNG NÀY
+
+  bool _isLoading = false;
 
   Future<void> _submit() async {
     if (_formKey.currentState!.validate() == false) return;
 
     setState(() => _isLoading = true);
     try {
-      await _authService.signUpWithEmail(
+      // ĐĂNG KÝ AUTH
+      final user = await _authService.signUpWithEmail(
         _emailController.text.trim(),
         _passwordController.text.trim(),
+      );
+
+      if (user == null) {
+        throw 'Không tạo được tài khoản';
+      }
+
+      // LƯU HỒ SƠ LÊN FIRESTORE
+      await _firestoreService.createUserProfile(
+        uid: user.uid,
+        fullName: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+        phone: _phoneController.text.trim(),
       );
 
       if (!mounted) return;
@@ -35,6 +51,7 @@ class _RegisterPageState extends State<RegisterPage> {
         context,
       ).showSnackBar(const SnackBar(content: Text('Đăng ký thành công')));
 
+      // VỀ MÀN ĐĂNG NHẬP
       Navigator.pushReplacementNamed(context, '/');
     } catch (e) {
       if (!mounted) return;
@@ -117,7 +134,6 @@ class _RegisterPageState extends State<RegisterPage> {
                               : null,
                         ),
                         const SizedBox(height: 16),
-                        // ===== EMAIL FIELD ĐÃ SỬA Ở ĐÂY =====
                         TextFormField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,

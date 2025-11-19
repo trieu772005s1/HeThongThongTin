@@ -4,13 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:fl_credit/pages/login_page.dart';
 import 'package:fl_credit/pages/register_screen.dart';
 import 'package:fl_credit/theme/app_theme.dart';
-
-// THÊM 2 DÒNG NÀY
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'package:fl_credit/pages/contract/loan_list_page.dart';
+import 'package:fl_credit/pages/contract/loan_contract_page.dart';
+import 'package:fl_credit/pages/home/customer/home_customer_page.dart';
+import 'package:fl_credit/pages/home/notification_page.dart';
+import 'package:fl_credit/pages/home/home_staff_page.dart';
+import 'package:fl_credit/pages/login_page.dart';
+import 'package:fl_credit/pages/register_screen.dart';
 
 void main() async {
-  // THÊM 3 DÒNG NÀY
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
@@ -32,8 +36,19 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const LoginPage(),
         '/register': (context) => const RegisterPage(),
+
+        // khách hàng
         '/home': (context) => const HomeCustomerPage(),
         '/notifications': (context) => const NotificationsPage(),
+
+        // nhân viên
+        '/staffHome': (context) => const HomeStaffPage(userRole: 'staff'),
+
+        // admin
+        '/adminHome': (context) => const HomeStaffPage(userRole: 'admin'),
+        // route tạo hợp đồng
+        '/loanContract': (context) => const LoanContractPage(),
+        '/loanList': (context) => LoanListPage(),
       },
     );
   }

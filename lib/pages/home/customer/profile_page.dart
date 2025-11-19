@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:fl_credit/services/auth_service.dart'; // THÊM DÒNG NÀY
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fl_credit/services/auth_service.dart';
+import 'package:fl_credit/services/firestore_service.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -22,7 +25,7 @@ class ProfilePage extends StatelessWidget {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              _buildHeader(),
+              _buildHeader(), // giờ header lấy tên từ Firestore
               const SizedBox(height: 30),
               _buildMenuList(context),
             ],
@@ -32,7 +35,34 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
+  /// HEADER: lấy user hiện tại + dữ liệu từ Firestore
   Widget _buildHeader() {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      // trường hợp hiếm khi chưa đăng nhập
+      return _headerContainer('Người dùng');
+    }
+
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: FirestoreService().userProfileStream(user.uid),
+      builder: (context, snapshot) {
+        String displayName = user.email ?? 'Người dùng';
+
+        if (snapshot.hasData && snapshot.data!.exists) {
+          final data = snapshot.data!.data();
+          if (data != null && data['fullName'] is String) {
+            displayName = data['fullName'] as String;
+          }
+        }
+
+        return _headerContainer(displayName);
+      },
+    );
+  }
+
+  /// UI của header, chỉ cần truyền tên
+  Widget _headerContainer(String name) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
@@ -65,9 +95,9 @@ class ProfilePage extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Trần Tuấn Triệu',
-                style: TextStyle(
+              Text(
+                name,
+                style: const TextStyle(
                   fontSize: 20,
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -102,6 +132,7 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
+  /// MENU + ĐĂNG XUẤT
   Widget _buildMenuList(BuildContext context) {
     final items = [
       {'icon': Icons.lock_outline, 'title': 'Thay đổi mật khẩu'},
@@ -137,17 +168,14 @@ class ProfilePage extends StatelessWidget {
                 trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                 onTap: () async {
                   if (isLogout) {
-                    // ĐĂNG XUẤT
                     await AuthService().signOut();
-                    if (!context.mounted) return;
-                    // Xóa hết stack, quay về màn login ('/')
                     Navigator.pushNamedAndRemoveUntil(
                       context,
                       '/',
                       (route) => false,
                     );
                   } else {
-                    // Sau này bạn xử lý các menu khác ở đây
+                    // Sau này xử lý thêm cho các menu khác
                   }
                 },
               ),

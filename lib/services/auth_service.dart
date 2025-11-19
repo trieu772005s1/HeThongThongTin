@@ -38,4 +38,15 @@ class AuthService {
   Future<void> signOut() async {
     await _auth.signOut();
   }
+
+  // Gửi email đặt lại mật khẩu
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+    } on FirebaseAuthException catch (e) {
+      throw e.message ?? 'Gửi email đặt lại mật khẩu thất bại';
+    } catch (_) {
+      throw 'Gửi email đặt lại mật khẩu thất bại';
+    }
+  }
 }
