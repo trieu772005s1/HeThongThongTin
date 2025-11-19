@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_credit/models/loan.dart';
-import 'package:fl_credit/pages/payment/pay_loan_page.dart'; // Đảm bảo đường dẫn này đúng
+import 'package:fl_credit/pages/payment/payment_schedule_page.dart';
+import 'package:fl_credit/pages/payment/pay_loan_page.dart';
 
 class ContractDetailPage extends StatelessWidget {
   final Loan loan;
@@ -21,10 +22,8 @@ class ContractDetailPage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFF1976D2),
         elevation: 0,
-        title: const Text(
-          'Chi tiết khoản vay',
-          style: TextStyle(color: Colors.white),
-        ),
+        foregroundColor: Colors.white,
+        title: const Text('Chi tiết khoản vay'),
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -45,7 +44,6 @@ class ContractDetailPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-
             _sectionCard(
               icon: Icons.bar_chart,
               title: 'Tiến độ thanh toán',
@@ -73,7 +71,6 @@ class ContractDetailPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-
             _sectionCard(
               icon: Icons.credit_card,
               title: 'Thanh toán sắp tới',
@@ -89,15 +86,23 @@ class ContractDetailPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-
             _sectionCard(
               icon: Icons.settings,
               title: 'Chức năng',
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _actionTile(Icons.schedule, 'Lịch trả', () {}),
-                  _actionTile(Icons.receipt_long, 'Xem HĐ', () {}),
+                  _actionTile(Icons.schedule, 'Lịch trả', () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PaymentSchedulePage(loan: loan),
+                      ),
+                    );
+                  }),
+                  _actionTile(Icons.receipt_long, 'Xem HĐ', () {
+                    // TODO: điều hướng xem hợp đồng
+                  }),
                   _actionTile(Icons.payments, 'Thanh toán', () {
                     Navigator.push(
                       context,
@@ -110,7 +115,6 @@ class ContractDetailPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-
             _sectionCard(
               icon: Icons.history,
               title: 'Lịch sử giao dịch',

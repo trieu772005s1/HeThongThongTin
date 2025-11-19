@@ -201,9 +201,7 @@ class PayLoanPage extends StatelessWidget {
           SizedBox(
             height: 46,
             child: ElevatedButton(
-              onPressed: () {
-                // TODO: xử lý thanh toán
-              },
+              onPressed: () {},
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue.shade700,
                 shape: RoundedRectangleBorder(
