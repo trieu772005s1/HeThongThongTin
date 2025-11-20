@@ -53,29 +53,9 @@ class HomeStaffPage extends StatelessWidget {
                 Navigator.pushNamed(context, '/loanList');
               },
             ),
-            cardTile(
-              context,
-              'Cập nhật thanh toán',
-              onTap: () {
-                // TODO: làm sau
-              },
-            ),
-            if (isAdmin)
-              cardTile(
-                context,
-                'Xóa hợp đồng',
-                onTap: () {
-                  // TODO: làm sau
-                },
-              ),
-            if (isAdmin)
-              cardTile(
-                context,
-                'Quản lý nhân viên',
-                onTap: () {
-                  // TODO: làm sau
-                },
-              ),
+            cardTile(context, 'Cập nhật thanh toán', onTap: () {}),
+            if (isAdmin) cardTile(context, 'Xóa hợp đồng', onTap: () {}),
+            if (isAdmin) cardTile(context, 'Quản lý nhân viên', onTap: () {}),
           ],
         ),
       ),

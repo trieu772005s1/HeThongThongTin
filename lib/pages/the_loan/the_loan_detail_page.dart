@@ -1,29 +1,31 @@
+import 'package:fl_credit/pages/the_loan/contract/view_contract_page.dart';
+import 'package:fl_credit/pages/the_loan/payment/pay_loan_page.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_credit/models/loan.dart';
-import 'package:fl_credit/pages/payment/payment_schedule_page.dart';
-import 'package:fl_credit/pages/payment/pay_loan_page.dart';
+import 'package:fl_credit/pages/the_loan/payment/payment_schedule_page.dart';
 
-class ContractDetailPage extends StatelessWidget {
+class TheLoanDetailPage extends StatelessWidget {
   final Loan loan;
 
-  const ContractDetailPage({super.key, required this.loan});
+  const TheLoanDetailPage({super.key, required this.loan});
 
   @override
   Widget build(BuildContext context) {
-    final NumberFormat fmt = NumberFormat('#,###', 'vi_VN');
+    final fmt = NumberFormat('#,###', 'vi_VN');
     final int remainingPrincipal = loan.remainingPrincipal ?? loan.amount;
     final String nextDueDate = loan.nextDueDate ?? '—';
-    final int installmentAmount = loan.installmentAmount ?? 0;
-    final List<Transaction> historyList = loan.transactionHistory ?? [];
+    final int installmentAmt = loan.installmentAmount ?? 0;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF4F7FA),
       appBar: AppBar(
         backgroundColor: const Color(0xFF1976D2),
         elevation: 0,
-        foregroundColor: Colors.white,
-        title: const Text('Chi tiết khoản vay'),
+        title: const Text(
+          'Chi tiết khoản vay',
+          style: TextStyle(color: Colors.white),
+        ),
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -40,6 +42,8 @@ class ContractDetailPage extends StatelessWidget {
                   _infoRow('Số hợp đồng', loan.id),
                   const SizedBox(height: 8),
                   _infoRow('Tổng số tiền vay', '${fmt.format(loan.amount)}đ'),
+                  const SizedBox(height: 8),
+                  _infoRow('Trạng thái', loan.status),
                 ],
               ),
             ),
@@ -50,12 +54,12 @@ class ContractDetailPage extends StatelessWidget {
               child: Column(
                 children: [
                   _infoRow(
-                    'Số tiền gốc đã trả',
+                    'Gốc đã trả',
                     '${fmt.format(loan.originalPaid ?? 0)}đ',
                   ),
                   const SizedBox(height: 8),
                   _infoRow(
-                    'Tổng nợ gốc hiện tại',
+                    'Nợ gốc còn lại',
                     '${fmt.format(remainingPrincipal)}đ',
                   ),
                   const SizedBox(height: 16),
@@ -76,11 +80,11 @@ class ContractDetailPage extends StatelessWidget {
               title: 'Thanh toán sắp tới',
               child: Column(
                 children: [
-                  _infoRow('Kỳ thanh toán tiếp theo', nextDueDate),
+                  _infoRow('Kỳ tiếp theo', nextDueDate),
                   const SizedBox(height: 8),
                   _infoRow(
-                    'Số tiền cần thanh toán',
-                    '${fmt.format(installmentAmount)}đ',
+                    'Số tiền kỳ tiếp theo',
+                    '${fmt.format(installmentAmt)}đ',
                   ),
                 ],
               ),
@@ -96,18 +100,24 @@ class ContractDetailPage extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => PaymentSchedulePage(loan: loan),
+                        builder: (_) => PaymentSchedulePage(loan: loan),
                       ),
                     );
                   }),
-                  _actionTile(Icons.receipt_long, 'Xem HĐ', () {
-                    // TODO: điều hướng xem hợp đồng
+                  _actionTile(Icons.receipt_long, 'Xem hợp đồng', () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ViewContractPage(loan: loan),
+                      ),
+                    );
                   }),
                   _actionTile(Icons.payments, 'Thanh toán', () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => PayLoanPage(loan: loan),
+                        builder: (_) =>
+                            PayLoanPage(loan: loan), // <- Mở trang thanh toán
                       ),
                     );
                   }),
@@ -118,10 +128,12 @@ class ContractDetailPage extends StatelessWidget {
             _sectionCard(
               icon: Icons.history,
               title: 'Lịch sử giao dịch',
-              child: (historyList.isEmpty)
+              child:
+                  (loan.transactionHistory == null ||
+                      loan.transactionHistory!.isEmpty)
                   ? const Text('Không có giao dịch nào.')
                   : Column(
-                      children: historyList.map((tx) {
+                      children: loan.transactionHistory!.map((tx) {
                         return ListTile(
                           contentPadding: EdgeInsets.zero,
                           leading: const Icon(
