@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:fl_credit/pages/loan_online/loan_step/step/loan_step2_page.dart';
+import 'package:fl_credit/pages/loan_online/loan_step/steps/loan_step2_page.dart';
 
 class LoanStepPage extends StatefulWidget {
   const LoanStepPage({super.key});
