@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 
-class LoanStep3Page extends StatefulWidget {
+class LoanStep3Page extends StatelessWidget {
   const LoanStep3Page({super.key});
 
   @override
-  State<LoanStep3Page> createState() => _LoanStep3PageState();
-}
-
-class _LoanStep3PageState extends State<LoanStep3Page> {
-  @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Bước 3/4'),
+        backgroundColor: const Color(0xFF1976D2),
+      ),
+      body: const Center(child: Text('Nội dung bước 3')),
+    );
   }
 }

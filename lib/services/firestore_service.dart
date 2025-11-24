@@ -22,7 +22,8 @@ class FirestoreService {
       'phone': phone,
       'role': role,
       'createdAt': FieldValue.serverTimestamp(),
-    });
+      'isVerifiedAccount': false,
+    }, SetOptions(merge: true));
   }
 
   // Lấy hồ sơ user 1 lần

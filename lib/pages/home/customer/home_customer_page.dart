@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:fl_credit/pages/home/customer/dashboard.dart' as dash;
-import 'package:fl_credit/pages/home/customer/profile_page.dart' as profile;
-import 'package:fl_credit/pages/the_loan/the_loan_page.dart'; // <- Đảm bảo class tên đúng
 import 'package:fl_credit/models/loan.dart';
+
+// Import các màn khách hàng
+import 'package:fl_credit/pages/home/customer/dashboard.dart';
+import 'package:fl_credit/pages/home/customer/profile_page.dart';
+import 'package:fl_credit/pages/the_loan/the_loan_page.dart';
 
 class HomeCustomerPage extends StatefulWidget {
   const HomeCustomerPage({super.key});
@@ -51,11 +53,11 @@ class _HomeCustomerPageState extends State<HomeCustomerPage> {
   void initState() {
     super.initState();
     _pages = [
-      const dash.CustomerDashboard(),
-      TheLoanPage(loans: _loans), // <- Đúng tên class, truyền danh sách vào
-      Container(),
-      Container(),
-      const profile.ProfilePage(),
+      const CustomerDashboard(), // index 0: Trang chủ
+      TheLoanPage(loans: _loans), // index 1: Khoản vay
+      Container(), // index 2: sẽ dùng cho FAB nếu cần
+      Container(), // index 3: Thẻ (placeholder)
+      const ProfilePage(), // index 4: Cá nhân
     ];
   }
 
@@ -81,7 +83,10 @@ class _HomeCustomerPageState extends State<HomeCustomerPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          // ví dụ: chuyển sang index 2 khi bấm FAB
+          // setState(() => _currentIndex = 2);
+        },
         backgroundColor: const Color(0xFF1976D2),
         child: const Icon(Icons.add, size: 32, color: Colors.white),
       ),

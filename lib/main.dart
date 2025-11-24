@@ -1,4 +1,3 @@
-import 'package:fl_credit/pages/home/customer/home_customer_page.dart';
 import 'package:fl_credit/pages/home/notification_page.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_credit/pages/login_page.dart';
@@ -6,6 +5,7 @@ import 'package:fl_credit/pages/register_screen.dart';
 import 'package:fl_credit/theme/app_theme.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'package:fl_credit/pages/home/home_selector.dart';
 
 import 'package:fl_credit/pages/home/home_staff_page.dart';
 
@@ -29,17 +29,18 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
       routes: {
+        // Login + Đăng ký
         '/': (context) => const LoginPage(),
         '/register': (context) => const RegisterPage(),
 
-        // khách hàng
-        '/home': (context) => const HomeCustomerPage(),
+        // Sau đăng nhập luôn đi qua HomeSelector để check role
+        '/home': (context) => const HomeSelectorPage(),
+
+        // Thông báo
         '/notifications': (context) => const NotificationsPage(),
 
-        // nhân viên
+        // Nếu cần gọi thẳng (ít dùng)
         '/staffHome': (context) => const HomeStaffPage(userRole: 'staff'),
-
-        // admin
         '/adminHome': (context) => const HomeStaffPage(userRole: 'admin'),
       },
     );
