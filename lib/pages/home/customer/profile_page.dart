@@ -1,9 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fl_credit/services/auth_service.dart';
+import 'package:fl_credit/pages/login_page.dart';
+import 'package:fl_credit/pages/auth/change_password_page.dart';
+import 'package:fl_credit/pages/support/support_page.dart';
+import 'package:fl_credit/pages/terms/loan_terms_page.dart';
+import 'package:fl_credit/pages/terms/app_terms_page.dart';
+import 'package:fl_credit/pages/terms/privacy_page.dart';
 
 class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key});
+  ProfilePage({super.key});
+
+  final AuthService _authService = AuthService();
 
   Future<DocumentSnapshot<Map<String, dynamic>>> _fetchUserDoc() async {
     final user = FirebaseAuth.instance.currentUser;
@@ -11,6 +20,35 @@ class ProfilePage extends StatelessWidget {
       throw Exception('Chưa đăng nhập');
     }
     return FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+  }
+
+  Future<void> _logout(BuildContext context) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Đăng xuất'),
+        content: const Text('Bạn có chắc muốn đăng xuất không?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Hủy'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Đăng xuất'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    await _authService.signOut();
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginPage()),
+      (route) => false,
+    );
   }
 
   @override
@@ -128,27 +166,83 @@ class ProfilePage extends StatelessWidget {
                     _buildItem(
                       icon: Icons.lock_outline,
                       title: 'Thay đổi mật khẩu',
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ChangePasswordPage(),
+                          ),
+                        );
+                      },
                     ),
                     _buildItem(
                       icon: Icons.support_agent,
                       title: 'Liên hệ hỗ trợ',
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const SupportPage(),
+                          ),
+                        );
+                      },
                     ),
                     _buildItem(
                       icon: Icons.description_outlined,
                       title: 'Điều khoản cho vay',
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const LoanTermsPage(),
+                          ),
+                        );
+                      },
                     ),
                     _buildItem(
                       icon: Icons.article_outlined,
                       title: 'Điều khoản & điều kiện sử dụng',
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const AppTermsPage(),
+                          ),
+                        );
+                      },
                     ),
                     _buildItem(
                       icon: Icons.privacy_tip_outlined,
                       title: 'Xử lý dữ liệu cá nhân',
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const PrivacyPage(),
+                          ),
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // ===== ĐĂNG XUẤT =====
+                    Card(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: ListTile(
+                        leading: const Icon(Icons.logout, color: Colors.red),
+                        title: const Text(
+                          'Đăng xuất',
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        onTap: () => _logout(context),
+                      ),
                     ),
                   ],
                 ),

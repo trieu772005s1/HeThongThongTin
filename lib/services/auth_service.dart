@@ -49,4 +49,16 @@ class AuthService {
       throw 'Gửi email đặt lại mật khẩu thất bại';
     }
   }
+
+  // ChangePassword
+  Future<void> changePassword(String newPassword) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw FirebaseAuthException(
+        code: 'user-not-logged-in',
+        message: 'Người dùng chưa đăng nhập',
+      );
+    }
+    await user.updatePassword(newPassword);
+  }
 }

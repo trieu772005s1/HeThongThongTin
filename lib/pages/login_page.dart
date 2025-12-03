@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:fl_credit/services/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fl_credit/services/firestore_service.dart';
+
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -16,6 +18,7 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
 
   final _authService = AuthService();
+  final _firestoreService = FirestoreService(); 
   bool _isLoading = false;
 
   @override
@@ -25,41 +28,43 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  Future<void> _login() async {
+    Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
     try {
+      // Đăng nhập Firebase Auth
       await _authService.signInWithEmail(
         _emailController.text.trim(),
         _passwordController.text.trim(),
       );
 
-      if (!mounted) return;
-
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
-        throw 'Không tìm thấy user sau khi đăng nhập';
+        throw 'Không lấy được thông tin người dùng';
       }
 
-      final doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
-
+      // Lấy hồ sơ user từ Firestore để xem role
+      final doc = await _firestoreService.getUserProfile(user.uid);
       final data = doc.data();
-      final role = data?['role'] ?? 'customer';
+      final role = (data?['role'] ?? 'customer') as String;
 
-      String route;
-      if (role == 'admin') {
-        route = '/adminHome';
-      } else if (role == 'staff') {
-        route = '/staffHome';
+      if (!mounted) return;
+
+      String nextRoute;
+      if (role == 'staff') {
+        nextRoute = '/staffHome';
+      } else if (role == 'admin') {
+        nextRoute = '/adminHome';
       } else {
-        route = '/home'; // customer
+        nextRoute = '/home'; // customer
       }
 
-      Navigator.pushReplacementNamed(context, route);
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        nextRoute,
+        (route) => false,
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -69,6 +74,7 @@ class _LoginPageState extends State<LoginPage> {
       if (mounted) setState(() => _isLoading = false);
     }
   }
+
 
   Future<void> _resetPassword() async {
     final email = _emailController.text.trim();

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_credit/models/loan.dart';
-
-// Import các màn khách hàng
+import 'package:fl_credit/pages/card/card_start_page.dart';
 import 'package:fl_credit/pages/home/customer/dashboard.dart';
 import 'package:fl_credit/pages/home/customer/profile_page.dart';
 import 'package:fl_credit/pages/the_loan/the_loan_page.dart';
@@ -56,8 +55,8 @@ class _HomeCustomerPageState extends State<HomeCustomerPage> {
       const CustomerDashboard(), // index 0: Trang chủ
       TheLoanPage(loans: _loans), // index 1: Khoản vay
       Container(), // index 2: sẽ dùng cho FAB nếu cần
-      Container(), // index 3: Thẻ (placeholder)
-      const ProfilePage(), // index 4: Cá nhân
+      const CardStartPage(), // index 3: Thẻ (placeholder)
+      ProfilePage(), // index 4: Cá nhân
     ];
   }
 
