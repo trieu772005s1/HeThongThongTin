@@ -294,9 +294,19 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
         _buildFuncItem(Icons.monetization_on, 'Vay Online', () {
           _startLoanFlow(context, fullName, idNumber, isVerified);
         }),
-        _buildFuncItem(Icons.shopping_bag, 'Tủ đồ', () {}),
+        _buildFuncItem(Icons.shopping_bag, 'Tủ đồ', () {
+          Navigator.push(
+    context,
+    MaterialPageRoute(builder: (_) => const WardrobePage()),
+            );
+        }),
         _buildFuncItem(Icons.location_on, 'Điểm giao dịch', () {}),
-        _buildFuncItem(Icons.support_agent, 'Hỗ trợ', () {}),
+        _buildFuncItem(Icons.support_agent, 'Hỗ trợ', () {
+           Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const SupportPage()),
+  );
+        }),
       ],
     );
   }
