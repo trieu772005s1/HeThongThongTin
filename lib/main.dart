@@ -1,13 +1,29 @@
-import 'package:fl_credit/pages/home/notification_page.dart';
 import 'package:flutter/material.dart';
-import 'package:fl_credit/pages/login_page.dart';
-import 'package:fl_credit/pages/register_screen.dart';
-import 'package:fl_credit/theme/app_theme.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'package:fl_credit/pages/home/home_selector.dart';
 
-import 'package:fl_credit/pages/home/home_staff_page.dart';
+import 'package:fl_credit/theme/app_theme.dart';
+import 'package:fl_credit/pages/login_page.dart';
+import 'package:fl_credit/pages/register_screen.dart';
+
+// Home selector
+import 'package:fl_credit/pages/home/staff/home_selector.dart';
+
+// Home staff + admin
+import 'package:fl_credit/pages/home/staff/home_staff_page.dart';
+
+// Notifications
+import 'package:fl_credit/pages/home/staff/notification_page.dart';
+
+// Loan pages (🔥 đúng vị trí thư mục của bạn)
+import 'package:fl_credit/pages/home/staff/loan_list_page.dart';
+import 'package:fl_credit/pages/home/staff/loan_detail_page.dart';
+import 'package:fl_credit/pages/home/staff/repayment_list_page.dart';
+import 'package:fl_credit/pages/home/staff/loan_contract_page.dart';
+
+
+// Staff management
+import 'package:fl_credit/pages/home/staff/staff_management_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,15 +49,29 @@ class MyApp extends StatelessWidget {
         '/': (context) => const LoginPage(),
         '/register': (context) => const RegisterPage(),
 
-        // Sau đăng nhập luôn đi qua HomeSelector để check role
-        '/home': (context) => const HomeSelectorPage(),
+        // Kiểm tra role
+       '/home': (context) {
+       final args = ModalRoute.of(context)!.settings.arguments as Map?;
+       final userRole = args?['userRole'] ?? 'staff'; // fallback
+       return HomeSelectorPage(userRole: userRole);
+       },
+
 
         // Thông báo
         '/notifications': (context) => const NotificationsPage(),
 
-        // Nếu cần gọi thẳng (ít dùng)
+        // Staff/Admin home
         '/staffHome': (context) => const HomeStaffPage(userRole: 'staff'),
         '/adminHome': (context) => const HomeStaffPage(userRole: 'admin'),
+
+        // Loan pages
+        '/loanList': (ctx) => const LoanListPage(),
+        '/loanContract': (context) => const LoanContractPage(),
+        '/loanDetail': (ctx) => const LoanDetailPage(),
+        '/repaymentList': (ctx) => const RepaymentListPage(),
+
+        // Staff
+        '/staffManagement': (ctx) => const StaffManagementPage(),
       },
     );
   }
