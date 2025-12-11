@@ -1,0 +1,16 @@
+import 'package:flutter/material.dart';
+
+class LoanStep4Page extends StatelessWidget {
+  const LoanStep4Page({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Bước 4/4'),
+        backgroundColor: const Color(0xFF1976D2),
+      ),
+      body: const Center(child: Text('Nội dung bước 4')),
+    );
+  }
+}
