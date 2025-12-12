@@ -62,6 +62,7 @@ class _LoanStep2_2State extends State<LoanStep2_2> {
     );
 
     // báo hoàn tất bước 2.x về LoanStep2_1 / LoanStepPage
+    if (!mounted) return;
     Navigator.pop(context, confirmed == true);
   }
 
@@ -231,11 +232,11 @@ class _LoanStep2_2State extends State<LoanStep2_2> {
                     items: const [
                       DropdownMenuItem(
                         value: 'mb',
-                        child: Text('Chuyển khoản vào ngân hàng MB'),
+                        child: Text('Chuyển khoản vào ngân hàng '),
                       ),
                       DropdownMenuItem(
                         value: 'other',
-                        child: Text('Chuyển khoản vào ngân hàng khác'),
+                        child: Text('Nhận tiền mặt tại điểm giao dịch'),
                       ),
                     ],
                     onChanged: (value) =>

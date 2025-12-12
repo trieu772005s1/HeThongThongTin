@@ -68,13 +68,12 @@ class _LoanStep2_1State extends State<LoanStep2_1> {
 
       if (!mounted) return;
 
-      // Sang bước 2/3 – Bạn cần vay bao nhiêu?
       final completed = await Navigator.push<bool>(
         context,
         MaterialPageRoute(builder: (_) => const LoanStep2_2()),
       );
 
-      // Pop ra LoanStep2Page, trả kết quả
+      if (!mounted) return;
       Navigator.pop(context, completed == true);
     } catch (e) {
       ScaffoldMessenger.of(
@@ -89,8 +88,13 @@ class _LoanStep2_1State extends State<LoanStep2_1> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Khởi tạo hồ sơ vay'),
+        title: const Text(
+          'Khởi tạo hồ sơ vay',
+          style: TextStyle(color: Colors.white),
+        ),
+        iconTheme: const IconThemeData(color: Colors.white),
         backgroundColor: const Color(0xFF1976D2),
+        elevation: 0,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),

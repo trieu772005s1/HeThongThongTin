@@ -19,8 +19,9 @@ class VoucherListPage extends StatelessWidget {
       body: StreamBuilder<List<Voucher>>(
         stream: service.getVouchers(userId),
         builder: (_, snapshot) {
-          if (!snapshot.hasData)
+          if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
+          }
 
           final items = snapshot.data!;
           if (items.isEmpty) return _empty("Bạn chưa có voucher nào");
