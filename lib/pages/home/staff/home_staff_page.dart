@@ -1,3 +1,4 @@
+// lib/pages/home/staff/home_staff_page.dart
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_credit/services/auth_service.dart';
@@ -19,9 +20,7 @@ class HomeStaffPage extends StatelessWidget {
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final double actionAspect = constraints.maxWidth > 420
-                ? 1.06
-                : 0.98;
+            final double actionAspect = constraints.maxWidth > 420 ? 1.06 : 0.98;
 
             return ListView(
               padding: EdgeInsets.fromLTRB(16, 12, 16, bottomPadding),
@@ -43,9 +42,7 @@ class HomeStaffPage extends StatelessWidget {
                           child: _statCardStream(
                             title: 'Tổng hợp hợp đồng',
                             icon: Icons.receipt_long,
-                            query: FirebaseFirestore.instance.collection(
-                              'loans',
-                            ),
+                            query: FirebaseFirestore.instance.collection('loans'),
                             onTap: () {
                               Navigator.pushNamed(context, '/loanList');
                             },
@@ -108,8 +105,7 @@ class HomeStaffPage extends StatelessWidget {
                       'Tạo hợp đồng',
                       'Thêm hợp đồng mới',
                       Icons.add_box,
-                      onTap: () =>
-                          Navigator.pushNamed(context, '/loanContract'),
+                      onTap: () => Navigator.pushNamed(context, '/loanContract'),
                     ),
                     _actionCard(
                       context,
@@ -123,16 +119,14 @@ class HomeStaffPage extends StatelessWidget {
                       'Cập nhật thanh toán',
                       'Ghi nhận / chỉnh sửa',
                       Icons.payment,
-                      onTap: () =>
-                          Navigator.pushNamed(context, '/repaymentList'),
+                      onTap: () => Navigator.pushNamed(context, '/repaymentList'),
                     ),
                     _actionCard(
                       context,
                       'Thông báo',
                       'Xem thông báo',
                       Icons.notifications,
-                      onTap: () =>
-                          Navigator.pushNamed(context, '/notifications'),
+                      onTap: () => Navigator.pushNamed(context, '/notifications'),
                     ),
                     if (isAdmin)
                       _actionCard(
@@ -140,8 +134,7 @@ class HomeStaffPage extends StatelessWidget {
                         'Quản lý nhân viên',
                         'Thêm / sửa / xóa',
                         Icons.manage_accounts,
-                        onTap: () =>
-                            Navigator.pushNamed(context, '/staffManagement'),
+                        onTap: () => Navigator.pushNamed(context, '/staffManagement'),
                       ),
                   ],
                 ),
@@ -167,29 +160,40 @@ class HomeStaffPage extends StatelessWidget {
                       return const Text('Chưa có hợp đồng nào');
                     }
 
+                    // Build a column of loan tiles; for each loan we fetch the user doc (if customerId present)
                     return Column(
                       children: docs.map((d) {
                         final data = d.data() as Map<String, dynamic>;
-                        return Card(
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: ListTile(
-                            leading: const Icon(Icons.receipt_long),
-                            title: Text(
-                              'KH: ${_shorten(data['customerId'] ?? '')}',
-                            ),
-                            subtitle: Text('Số tiền: ${data['amount']}'),
-                            trailing: const Icon(Icons.chevron_right),
-                            onTap: () {
-                              Navigator.pushNamed(
-                                context,
-                                '/loanDetail',
-                                arguments: {'loanId': d.id},
-                              );
-                            },
-                          ),
+                        final customerId = (data['customerId'] ?? '').toString();
+                        final amount = data['amount'] ?? '';
+
+                        if (customerId.isEmpty) {
+                          // fallback when no customerId
+                          return _loanTile(
+                            context,
+                            loanId: d.id,
+                            customerLabel: 'KH: -',
+                            amountLabel: 'Số tiền: $amount',
+                          );
+                        }
+
+                        // FutureBuilder fetches the user doc to show name
+                        return FutureBuilder<DocumentSnapshot>(
+                          future: FirebaseFirestore.instance.collection('users').doc(customerId).get(),
+                          builder: (ctx, userSnap) {
+                            String customerLabel = 'KH: ${_shorten(customerId)}';
+                            if (userSnap.connectionState == ConnectionState.done && userSnap.hasData && userSnap.data!.exists) {
+                              final u = (userSnap.data!.data() ?? {}) as Map<String, dynamic>;
+                              final name = (u['full_name'] ?? u['fullName'] ?? u['name'] ?? '').toString();
+                              if (name.isNotEmpty) customerLabel = 'KH: $name';
+                            }
+                            return _loanTile(
+                              context,
+                              loanId: d.id,
+                              customerLabel: customerLabel,
+                              amountLabel: 'Số tiền: $amount',
+                            );
+                          },
                         );
                       }).toList(),
                     );
@@ -230,9 +234,7 @@ class HomeStaffPage extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  isAdmin
-                      ? 'Bảng điều khiển Admin'
-                      : 'Bảng điều khiển Nhân viên',
+                  isAdmin ? 'Bảng điều khiển Admin' : 'Bảng điều khiển Nhân viên',
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -249,6 +251,26 @@ class HomeStaffPage extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _loanTile(BuildContext context, {required String loanId, required String customerLabel, required String amountLabel}) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      child: ListTile(
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(8)),
+          child: const Icon(Icons.receipt_long, color: Colors.blue),
+        ),
+        title: Text(customerLabel, style: const TextStyle(fontWeight: FontWeight.w700)),
+        subtitle: Text(amountLabel),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () {
+          Navigator.pushNamed(context, '/loanDetail', arguments: {'loanId': loanId});
+        },
       ),
     );
   }
@@ -282,20 +304,8 @@ class HomeStaffPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.black54,
-                      ),
-                    ),
-                    Text(
-                      '$count',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    Text(title, style: const TextStyle(fontSize: 12, color: Colors.black54)),
+                    Text('$count', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   ],
                 ),
               ],
@@ -306,40 +316,24 @@ class HomeStaffPage extends StatelessWidget {
     );
   }
 
-  Widget _sectionTitle(String text) => Text(
-    text,
-    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-  );
+  Widget _sectionTitle(String text) => Text(text, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold));
 
-  static String _shorten(String s, {int keep = 8}) =>
-      s.length <= keep ? s : '${s.substring(0, keep)}...';
+  static String _shorten(String s, {int keep = 8}) => s.length <= keep ? s : '${s.substring(0, keep)}...';
 
-  Widget _actionCard(
-    BuildContext context,
-    String title,
-    String sub,
-    IconData icon, {
-    required VoidCallback onTap,
-  }) {
+  Widget _actionCard(BuildContext context, String title, String sub, IconData icon, {required VoidCallback onTap}) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-        ),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(icon, color: Colors.indigo),
             const SizedBox(height: 12),
             Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-            Text(
-              sub,
-              style: const TextStyle(fontSize: 12, color: Colors.black54),
-            ),
+            Text(sub, style: const TextStyle(fontSize: 12, color: Colors.black54)),
           ],
         ),
       ),

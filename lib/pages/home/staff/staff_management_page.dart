@@ -1,3 +1,4 @@
+// lib/pages/home/staff/staff_management_page.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
@@ -31,7 +32,7 @@ class StaffManagementPage extends StatelessWidget {
             itemBuilder: (context, i) {
               final d = docs[i];
               final data = d.data() as Map<String, dynamic>;
-              final role = data['role'] ?? 'staff';
+              final role = (data['role'] ?? 'staff').toString();
 
               final isAdmin = role == 'admin';
 
@@ -64,7 +65,7 @@ class StaffManagementPage extends StatelessWidget {
                     ),
                   ),
                   title: Text(
-                    data['full_name'] ?? 'Chưa đặt tên',
+                    _displayNameFrom(data),
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   subtitle: Column(
@@ -72,7 +73,7 @@ class StaffManagementPage extends StatelessWidget {
                     children: [
                       const SizedBox(height: 4),
                       Text(
-                        data['email'] ?? '',
+                        (data['email'] ?? '').toString(),
                         style: const TextStyle(fontSize: 12),
                       ),
                       const SizedBox(height: 6),
@@ -123,6 +124,23 @@ class StaffManagementPage extends StatelessWidget {
         },
       ),
     );
+  }
+
+  // Try several common name fields; fall back to email or 'Chưa đặt tên'
+  static String _displayNameFrom(Map<String, dynamic> data) {
+    final candidates = <String>[
+      (data['full_name'] ?? '').toString(),
+      (data['fullName'] ?? '').toString(),
+      (data['name'] ?? '').toString(),
+      (data['displayName'] ?? '').toString(),
+      (data['username'] ?? '').toString(),
+    ];
+    for (final c in candidates) {
+      if (c.trim().isNotEmpty) return c.trim();
+    }
+    final email = (data['email'] ?? '').toString();
+    if (email.trim().isNotEmpty) return email;
+    return 'Chưa đặt tên';
   }
 
   // ================= UI HELPERS =================
