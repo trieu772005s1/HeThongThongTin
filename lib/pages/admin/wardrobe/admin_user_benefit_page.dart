@@ -110,7 +110,6 @@ class AdminUserBenefitPage extends StatelessWidget {
           itemCount: list.length,
           itemBuilder: (_, i) {
             final v = list[i];
-
             final expiredText = v.expiredAt.toString().split(' ').first;
 
             return Container(
@@ -120,9 +119,10 @@ class AdminUserBenefitPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(v.title,
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text(
+                    v.title,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                   Text("Mã: ${v.code}"),
                   Text("Giảm: ${v.discount}%"),
                   Text(
@@ -146,24 +146,33 @@ class AdminUserBenefitPage extends StatelessWidget {
   }
 
   // =============================
-  // NÚT FAB
+  // NÚT FAB — TỰ ĐỔI THEO TAB
   // =============================
   Widget _buildFab(BuildContext context) {
-    return Builder(builder: (context) {
-      final tabIndex = DefaultTabController.of(context).index;
+    return Builder(
+      builder: (context) {
+        final tabController = DefaultTabController.of(context);
 
-      return FloatingActionButton.extended(
-        onPressed: () {
-          if (tabIndex == 0) {
-            _showAddRewardDialog(context);
-          } else {
-            _showAddVoucherDialog(context);
-          }
-        },
-        label: Text(tabIndex == 0 ? 'Thêm phần quà' : 'Thêm voucher'),
-        icon: const Icon(Icons.add),
-      );
-    });
+        return AnimatedBuilder(
+          animation: tabController,
+          builder: (context, _) {
+            final index = tabController.index;
+
+            return FloatingActionButton.extended(
+              onPressed: () {
+                if (index == 0) {
+                  _showAddRewardDialog(context);
+                } else {
+                  _showAddVoucherDialog(context);
+                }
+              },
+              label: Text(index == 0 ? 'Thêm phần quà' : 'Thêm voucher'),
+              icon: const Icon(Icons.add),
+            );
+          },
+        );
+      },
+    );
   }
 
   // =============================
@@ -190,13 +199,16 @@ class AdminUserBenefitPage extends StatelessWidget {
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Hủy')),
           ElevatedButton(
             onPressed: () async {
-              await service.addReward(userId, Reward(
-                id: '',
-                title: titleCtrl.text,
-                description: descCtrl.text,
-                icon: iconCtrl.text,
-                createdAt: DateTime.now(),
-              ));
+              await service.addReward(
+                userId,
+                Reward(
+                  id: '',
+                  title: titleCtrl.text,
+                  description: descCtrl.text,
+                  icon: iconCtrl.text,
+                  createdAt: DateTime.now(),
+                ),
+              );
 
               Navigator.pop(context);
             },
@@ -268,6 +280,7 @@ class AdminUserBenefitPage extends StatelessWidget {
                     expiredAt: expiredAt,
                   ),
                 );
+
                 Navigator.pop(context);
               },
               child: const Text('Lưu'),
@@ -278,6 +291,9 @@ class AdminUserBenefitPage extends StatelessWidget {
     );
   }
 
+  // =============================
+  // BOX STYLE
+  // =============================
   BoxDecoration get _box => BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
