@@ -15,6 +15,30 @@ class HomeSelectorPage extends StatefulWidget {
 class _HomeStaffPageState extends State<HomeSelectorPage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  bool _redirecting = true; // thêm để tránh UI staff hiện ra trước khi redirect
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _autoRedirect());
+  }
+
+  void _autoRedirect() {
+    final role = widget.userRole.toLowerCase().trim();
+
+    if (role == "customers" || role == "customer" || role == "user") {
+      Navigator.pushReplacementNamed(context, "/customerHome");
+      return;
+    }
+
+    if (role == "admin") {
+      Navigator.pushReplacementNamed(context, "/adminHome");
+      return;
+    }
+
+    Navigator.pushReplacementNamed(context, "/staffHome");
+  }
+
   Future<void> _signOut() async {
     await AuthService().signOut();
     if (!mounted) return;
@@ -40,7 +64,6 @@ class _HomeStaffPageState extends State<HomeSelectorPage> {
     final batch = _firestore.batch();
     final loanRef = _firestore.collection('loans').doc(loanId);
 
-    // Xóa toàn bộ repay subcollection (nếu có)
     final repayments = await loanRef.collection('repayments').get();
     for (final doc in repayments.docs) {
       batch.delete(doc.reference);
@@ -52,22 +75,18 @@ class _HomeStaffPageState extends State<HomeSelectorPage> {
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã xóa hợp đồng.')));
   }
 
-  // Mở màn cập nhật thanh toán: truyền loanId
   void _openUpdateRepayment(String loanId) {
     Navigator.pushNamed(context, '/updateRepayment', arguments: {'loanId': loanId});
   }
 
-  // Mở màn quản lý nhân viên
   void _openManageStaff() {
     Navigator.pushNamed(context, '/staffManagement');
   }
 
-  // Mở tạo hợp đồng
   void _openCreateContract() {
     Navigator.pushNamed(context, '/loanContract');
   }
 
-  // Mở danh sách khoản vay
   void _openLoanList() {
     Navigator.pushNamed(context, '/loanList');
   }
@@ -104,7 +123,6 @@ class _HomeStaffPageState extends State<HomeSelectorPage> {
     );
   }
 
-  // Streams để hiển thị thống kê
   Stream<int> get _totalLoansStream =>
       _firestore.collection('loans').snapshots().map((s) => s.docs.length);
 
@@ -120,7 +138,6 @@ class _HomeStaffPageState extends State<HomeSelectorPage> {
       .snapshots()
       .map((s) => s.docs.length);
 
-  // Widget hiển thị 5 khoản vay mới nhất
   Widget _recentLoans() {
     return StreamBuilder<QuerySnapshot>(
       stream: _firestore.collection('loans').orderBy('createdAt', descending: true).limit(5).snapshots(),
@@ -167,7 +184,15 @@ class _HomeStaffPageState extends State<HomeSelectorPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_redirecting) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    // Giữ nguyên toàn bộ UI cũ của anh
     final title = widget.isAdmin ? 'Trang quản trị (Admin)' : 'Trang nhân viên';
+
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
@@ -186,18 +211,13 @@ class _HomeStaffPageState extends State<HomeSelectorPage> {
           gradient: LinearGradient(
             colors: [Color(0xFF1976D2), Color(0xFF64B5F6)],
             begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+            end: Alignment.bottomRight),
         ),
         child: RefreshIndicator(
-          onRefresh: () async {
-            // chỉ để refresh UI; streams tự cập nhật nhưng ta giữ để UX tốt
-            setState(() {});
-          },
+          onRefresh: () async => setState(() {}),
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              // Thống kê
               Row(
                 children: [
                   Expanded(child: _statCard('Tổng hợp đồng', _totalLoansStream, Icons.receipt_long)),
@@ -233,7 +253,7 @@ class _HomeStaffPageState extends State<HomeSelectorPage> {
               ),
 
               const SizedBox(height: 16),
-              // Các chức năng chính
+
               Card(
                 margin: const EdgeInsets.symmetric(vertical: 6),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -243,6 +263,7 @@ class _HomeStaffPageState extends State<HomeSelectorPage> {
                   onTap: _openCreateContract,
                 ),
               ),
+
               Card(
                 margin: const EdgeInsets.symmetric(vertical: 6),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -252,6 +273,7 @@ class _HomeStaffPageState extends State<HomeSelectorPage> {
                   onTap: () => Navigator.pushNamed(context, '/repaymentList'),
                 ),
               ),
+
               if (widget.isAdmin)
                 Card(
                   margin: const EdgeInsets.symmetric(vertical: 6),
@@ -262,6 +284,7 @@ class _HomeStaffPageState extends State<HomeSelectorPage> {
                     onTap: _openManageStaff,
                   ),
                 ),
+
               if (widget.isAdmin)
                 Card(
                   margin: const EdgeInsets.symmetric(vertical: 6),
