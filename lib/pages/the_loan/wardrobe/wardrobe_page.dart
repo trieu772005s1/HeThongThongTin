@@ -1,121 +1,196 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import 'reward_list_page.dart';
+import 'voucher_list_page.dart';
+import 'promotion_list_page.dart';
+import '../../../../services/wardrobe_service.dart';
 
 class WardrobePage extends StatelessWidget {
-  const WardrobePage({super.key});
+  WardrobePage({super.key});
 
-   @override
+  final WardrobeService service = WardrobeService();
+
+  @override
   Widget build(BuildContext context) {
+    final userId = FirebaseAuth.instance.currentUser!.uid;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F9FD),
       appBar: AppBar(
-        elevation: 0,
-        iconTheme: const IconThemeData(
-        color: Colors.white,  // 👉 arrow trắng
-       ),
-        backgroundColor: const Color(0xFF1976D2),
-        title: const Text(
-          'Tủ đồ',
-          style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white,),
-        ),
+        title: const Text('Tủ đồ'),
       ),
-      body: Column(
-        children: [
-          // Phần header màu cam/gradient phía trên
-          
+      backgroundColor: const Color(0xfff3f8ff),
 
-          const SizedBox(height: 16),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: StreamBuilder<Map<String, int>>(
+          stream: _countsStream(userId),
+          builder: (_, snap) {
+            if (!snap.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          // Card nội dung
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.only(left: 35, right: 16),
-              child: Wrap(
-                 
-                spacing: 35,
-                runSpacing: 16,
-                children: [
-                  _buildItemCard(
+            final counts = snap.data!;
+
+            return Row(
+              children: [
+                Expanded(
+                  child: _WardrobeCard(
                     title: 'Phần quà',
-                    countText: 'Hiện có 0',
+                    subtitle: 'Hiện có ${counts["reward"]}',
                     icon: Icons.card_giftcard,
-                    iconBg: const Color(0xFFFFE5E5),
-                    iconColor: const Color(0xFFE53935),
+                    iconBgColor: Colors.pink.shade50,
+                    iconColor: Colors.pink.shade400,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => RewardListPage(),
+                        ),
+                      );
+                    },
                   ),
-                  _buildItemCard(
+                ),
+
+                const SizedBox(width: 16),
+
+                Expanded(
+                  child: _WardrobeCard(
                     title: 'Voucher',
-                    countText: 'Hiện có 0',
-                    icon: Icons.confirmation_num,
-                    iconBg: const Color(0xFFFFF0D7),
-                    iconColor: const Color(0xFFFF9800),
+                    subtitle: 'Hiện có ${counts["voucher"]}',
+                    icon: Icons.confirmation_number_outlined,
+                    iconBgColor: Colors.amber.shade50,
+                    iconColor: Colors.amber.shade600,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => VoucherListPage(),
+                        ),
+                      );
+                    },
                   ),
-                  _buildItemCard(
+                ),
+
+                const SizedBox(width: 16),
+
+                Expanded(
+                  child: _WardrobeCard(
                     title: 'Ưu đãi',
-                    countText: 'Hiện có 0',
+                    subtitle: 'Hiện có ${counts["promotion"]}',
                     icon: Icons.percent,
-                    iconBg: const Color(0xFFE3F2FD),
-                    iconColor: const Color(0xFF1976D2),
+                    iconBgColor: Colors.lightBlue.shade50,
+                    iconColor: Colors.lightBlue.shade600,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => PromotionListPage(),
+                        ),
+                      );
+                    },
                   ),
-                ],
-              ),
-            ),
-          ),
-        ],
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
 
-  static Widget _buildItemCard({
-  required String title,
-  required String countText,
-  required IconData icon,
-  required Color iconBg,
-  required Color iconColor,
-}) {
-  return Container(
-    width: 150,
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(18),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black12.withOpacity(0.05),
-          blurRadius: 6,
-          offset: const Offset(0, 3),
-        )
-      ],
-    ),
-    padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        CircleAvatar(
-          radius: 26,
-          backgroundColor: iconBg,
-          child: Icon(icon, color: iconColor, size: 26),
-        ),
-        const SizedBox(height: 14),
+  // ==========================
+  // ĐẾM SỐ LƯỢNG REWARD/VOUCHER/PROMO
+  // ==========================
+  Stream<Map<String, int>> _countsStream(String userId) {
+    final userDoc = FirebaseFirestore.instance.collection('users').doc(userId);
 
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+    final rewardRef = userDoc.collection('rewards');
+    final voucherRef = userDoc.collection('vouchers');
+    final promoRef = userDoc.collection('promotions');
 
-        const SizedBox(height: 6),
+    return userDoc.snapshots().asyncMap((_) async {
+      final r = await rewardRef.get();
+      final v = await voucherRef.get();
+      final p = await promoRef.get();
 
-        Text(
-          countText,
-          style: const TextStyle(
-            fontSize: 12,
-            color: Colors.black54,
-          ),
-        ),
-      ],
-    ),
-  );
+      return {
+        "reward": r.docs.length,
+        "voucher": v.docs.length,
+        "promotion": p.docs.length,
+      };
+    });
+  }
 }
 
+class _WardrobeCard extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color iconBgColor;
+  final Color iconColor;
+  final VoidCallback onTap;
+
+  const _WardrobeCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.iconBgColor,
+    required this.iconColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: onTap,
+      child: Container(
+        height: 140,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: iconBgColor,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: iconColor, size: 24),
+            ),
+            const Spacer(),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

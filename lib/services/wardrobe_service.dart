@@ -14,21 +14,24 @@ class WardrobeService {
         .collection("users")
         .doc(userId)
         .collection("rewards")
+        .orderBy("createdAt", descending: true)
         .snapshots()
         .map((snap) {
       return snap.docs.map((d) {
-        final data = d.data() as Map<String, dynamic>;
-        return Reward.fromMap(d.id, data);
+        return Reward.fromMap(d.id, d.data());
       }).toList();
     });
   }
 
   Future<void> addReward(String userId, Reward reward) async {
-    await _db
-        .collection("users")
-        .doc(userId)
-        .collection("rewards")
-        .add(reward.toMap());
+    final ref =
+        _db.collection("users").doc(userId).collection("rewards").doc();
+
+    await ref.set({
+      "id": ref.id,
+      ...reward.toMap(),
+      "createdAt": Timestamp.now(),
+    });
   }
 
   Future<void> deleteReward(String userId, String rewardId) async {
@@ -41,47 +44,53 @@ class WardrobeService {
   }
 
   // ============================================================
-  // VOUCHER
+// VOUCHER
+// ============================================================
+Stream<List<Voucher>> getVouchers(String userId) {
+  return _db
+      .collection("users")
+      .doc(userId)
+      .collection("vouchers")
+      .orderBy("expiredAt")
+      .snapshots()
+      .map((snap) {
+    return snap.docs.map((d) {
+      // d.id: String, d.data(): Map<String, dynamic>
+      return Voucher.fromMap(
+        d.id,
+        d.data() as Map<String, dynamic>,
+      );
+    }).toList();
+  });
+}
+
+Future<void> addVoucher(String userId, Voucher voucher) async {
+  final ref =
+      _db.collection("users").doc(userId).collection("vouchers").doc();
+
+  await ref.set({
+    "id": ref.id,
+    ...voucher.toMap(),
+    "createdAt": Timestamp.now(),
+  });
+}
+
+Future<void> deleteVoucher(String userId, String voucherId) async {
+  await _db
+      .collection("users")
+      .doc(userId)
+      .collection("vouchers")
+      .doc(voucherId)
+      .delete();
+}
+
   // ============================================================
-  Stream<List<Voucher>> getVouchers(String userId) {
-    return _db
-        .collection("users")
-        .doc(userId)
-        .collection("vouchers")
-        .snapshots()
-        .map((snap) {
-      return snap.docs.map((d) {
-        final data = d.data() as Map<String, dynamic>;
-        return Voucher.fromMap(d.id, data);
-      }).toList();
-    });
-  }
-
-  Future<void> addVoucher(String userId, Voucher voucher) async {
-    await _db
-        .collection("users")
-        .doc(userId)
-        .collection("vouchers")
-        .add(voucher.toMap());
-  }
-
-  Future<void> deleteVoucher(String userId, String voucherId) async {
-    await _db
-        .collection("users")
-        .doc(userId)
-        .collection("vouchers")
-        .doc(voucherId)
-        .delete();
-  }
-
-  // ============================================================
-  // PROMOTION (ưu đãi)
+  // PROMOTION
   // ============================================================
   Stream<List<Promotion>> getPromotions() {
     return _db.collection("promotions").snapshots().map((snap) {
       return snap.docs.map((d) {
-        final data = d.data() as Map<String, dynamic>;
-        return Promotion.fromMap(d.id, data);
+        return Promotion.fromMap(d.id, d.data());
       }).toList();
     });
   }

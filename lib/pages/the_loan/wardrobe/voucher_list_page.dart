@@ -15,7 +15,10 @@ class VoucherListPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Voucher')),
-      body: StreamBuilder<List<Map<String, dynamic>>>(
+
+
+
+      body: StreamBuilder<List<Voucher>>(
         stream: service.getVouchers(userId),
         builder: (_, snapshot) {
           if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
@@ -37,15 +40,15 @@ class VoucherListPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      v['title'] ?? '',
+                      v.title,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Text("Mã: ${v['code'] ?? ''}"),
-                    Text("Giảm: ${v['discount'] ?? 0}%"),
-                    Text("Hết hạn: ${(v['expiredAt'] is DateTime ? v['expiredAt'].toString().split(' ').first : v['expiredAt']?.toString()?.split(' ')?.first ?? '')}"),
+                    Text("Mã: ${v.code}"),
+                    Text("Giảm: ${v.discount}%"),
+                    Text("Hết hạn: ${v.expiredAt.toString().split(' ').first}"),
                   ],
                 ),
               );
@@ -55,6 +58,74 @@ class VoucherListPage extends StatelessWidget {
       ),
     );
   }
+
+  // =====================
+  // POPUP TẠO VOUCHER
+  // =====================
+  void _openCreateVoucherDialog(BuildContext context, String userId) {
+    final titleCtrl = TextEditingController();
+    final codeCtrl = TextEditingController();
+    final discountCtrl = TextEditingController();
+    final expiredCtrl = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (_) {
+        return AlertDialog(
+          title: const Text("Tạo Voucher"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: titleCtrl,
+                decoration: const InputDecoration(labelText: "Tên voucher"),
+              ),
+              TextField(
+                controller: codeCtrl,
+                decoration: const InputDecoration(labelText: "Mã voucher"),
+              ),
+              TextField(
+                controller: discountCtrl,
+                decoration: const InputDecoration(labelText: "Giảm (%)"),
+                keyboardType: TextInputType.number,
+              ),
+              TextField(
+                controller: expiredCtrl,
+                decoration: const InputDecoration(labelText: "Ngày hết hạn (YYYY-MM-DD)"),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Hủy"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final v = Voucher(
+                  id: '',
+                  title: titleCtrl.text,
+                  code: codeCtrl.text,
+                  discount: int.tryParse(discountCtrl.text) ?? 0,
+                  expiredAt: DateTime.tryParse(expiredCtrl.text) ?? DateTime.now(),
+                );
+
+                await service.addVoucher(userId, v);
+
+                if (!context.mounted) return;
+                Navigator.pop(context);
+              },
+              child: const Text("Tạo"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // =====================
+  // UI phụ
+  // =====================
 
   Widget _empty(String text) => Center(
         child: Text(
@@ -68,7 +139,7 @@ class VoucherListPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Color.fromRGBO(0, 0, 0, 0.05),
             blurRadius: 6,
             offset: const Offset(0, 4),
           )

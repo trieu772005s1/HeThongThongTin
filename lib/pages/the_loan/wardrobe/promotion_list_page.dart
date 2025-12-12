@@ -1,71 +1,81 @@
 import 'package:flutter/material.dart';
+import '../../../../models/promotion.dart';
+import '../../../../services/wardrobe_service.dart';
 
 class PromotionListPage extends StatelessWidget {
-  const PromotionListPage({super.key});
+  PromotionListPage({super.key});   // KHÔNG dùng const
+
+  final WardrobeService service = WardrobeService();
 
   @override
   Widget build(BuildContext context) {
-    final promotions = <String>[]; // TODO: lấy từ server
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Ưu đãi'),
-      ),
-      body: promotions.isEmpty
-          ? _buildEmpty()
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: promotions.length,
-              itemBuilder: (context, index) {
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 6,
+      appBar: AppBar(title: const Text('Ưu đãi')),
+      body: StreamBuilder<List<Promotion>>(
+        stream: service.getPromotions(),
+        builder: (_, snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final items = snapshot.data!;
+          if (items.isEmpty) {
+            return _empty("Chưa có ưu đãi khả dụng");
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: items.length,
+            itemBuilder: (_, i) {
+              final p = items[i];
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(16),
+                decoration: _box,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      p.title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
                       ),
-                    ],
-                  ),
-                  child: Text(promotions[index]),
-                );
-              },
-            ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(p.description),
+                    const SizedBox(height: 4),
+                    Text(
+                      "Hiệu lực: ${p.startAt.toString().split(' ').first} → ${p.endAt.toString().split(' ').first}",
+                      style: TextStyle(color: Colors.grey.shade600),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      ),
     );
   }
 
-  Widget _buildEmpty() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.percent, size: 56, color: Colors.blue.shade600),
-            const SizedBox(height: 16),
-            const Text(
-              'Chưa có ưu đãi khả dụng',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Các ưu đãi đặc biệt sẽ được hiển thị tại đây khi bạn đủ điều kiện.',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade600,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+  Widget _empty(String text) => Center(
+        child: Text(
+          text,
+          style: const TextStyle(fontSize: 16, color: Colors.grey),
         ),
-      ),
-    );
-  }
+      );
+
+  BoxDecoration get _box => BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Color.fromRGBO(0, 0, 0, 0.05),
+            blurRadius: 6,
+            offset: const Offset(0, 4),
+          )
+        ],
+      );
 }

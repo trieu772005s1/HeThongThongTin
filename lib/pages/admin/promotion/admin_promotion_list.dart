@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../../services/wardrobe_service.dart';
+import '../../../../models/promotion.dart';
 
-class PromotionListPage extends StatelessWidget {
-  PromotionListPage({super.key});
+class AdminPromotionList extends StatelessWidget {
+  AdminPromotionList({super.key});
 
   final WardrobeService service = WardrobeService();
 
@@ -10,8 +11,8 @@ class PromotionListPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Ưu đãi')),
-      body: StreamBuilder<List<Map<String, dynamic>>>(
-        stream: service.getPromotions(),   // → Stream<List<Map>>
+      body: StreamBuilder<List<Promotion>>(
+        stream: service.getPromotions(), // ĐÃ SỬA ĐÚNG KIỂU
         builder: (_, snapshot) {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
@@ -28,22 +29,12 @@ class PromotionListPage extends StatelessWidget {
             itemBuilder: (_, i) {
               final p = items[i];
 
-              final title = p['title'] ?? '';
-              final desc = p['description'] ?? '';
+              final title = p.title;
+              final desc = p.description;
 
-              // Xử lý ngày
-              String startText = '';
-              String endText = '';
+              final startText = p.startAt.toString().split(' ').first;
 
-              final start = p['startAt'];
-              final end = p['endAt'];
-
-              if (start != null) {
-                startText = start.toString().split(' ').first;
-              }
-              if (end != null) {
-                endText = end.toString().split(' ').first;
-              }
+              final endText = p.endAt.toString().split(' ').first;
 
               return Container(
                 margin: const EdgeInsets.only(bottom: 12),
@@ -59,8 +50,10 @@ class PromotionListPage extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+
                     const SizedBox(height: 4),
                     Text(desc),
+
                     const SizedBox(height: 4),
                     Text(
                       "Hiệu lực: $startText → $endText",
@@ -88,7 +81,7 @@ class PromotionListPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Color.fromRGBO(0, 0, 0, 0.05),
             blurRadius: 6,
             offset: const Offset(0, 4),
           )

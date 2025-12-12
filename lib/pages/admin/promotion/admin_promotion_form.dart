@@ -5,7 +5,7 @@ import '../../../models/promotion.dart';
 class AdminPromotionForm extends StatefulWidget {
   final Promotion? editData;
 
-  AdminPromotionForm({super.key, this.editData}); // KHÔNG dùng const
+  const AdminPromotionForm({super.key, this.editData}); // KHÔNG dùng const
 
   @override
   State<AdminPromotionForm> createState() => _AdminPromotionFormState();
@@ -130,6 +130,7 @@ class _AdminPromotionFormState extends State<AdminPromotionForm> {
       await promotions.doc(widget.editData!.id).update(data); // cập nhật
     }
 
+    if (!context.mounted) return;
     Navigator.pop(context);
   }
 }

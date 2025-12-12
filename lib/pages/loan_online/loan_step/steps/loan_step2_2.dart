@@ -62,6 +62,7 @@ class _LoanStep2_2State extends State<LoanStep2_2> {
     );
 
     // báo hoàn tất bước 2.x về LoanStep2_1 / LoanStepPage
+    if (!mounted) return;
     Navigator.pop(context, confirmed == true);
   }
 

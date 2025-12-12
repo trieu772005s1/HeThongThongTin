@@ -451,7 +451,7 @@ class _LoanStep2_3State extends State<LoanStep2_3> {
                 BoxShadow(
                   offset: const Offset(0, -1),
                   blurRadius: 4,
-                  color: Colors.black.withOpacity(0.05),
+                    color: Color.fromRGBO(0, 0, 0, 0.05),
                 ),
               ],
             ),

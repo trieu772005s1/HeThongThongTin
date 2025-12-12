@@ -15,12 +15,13 @@ class Voucher {
     required this.expiredAt,
   });
 
+  // id là String, data là Map
   factory Voucher.fromMap(String id, Map<String, dynamic> data) {
     return Voucher(
       id: id,
       title: data['title'] ?? '',
       code: data['code'] ?? '',
-      discount: data['discount'] ?? 0,
+      discount: (data['discount'] ?? 0) as int,
       expiredAt: (data['expiredAt'] as Timestamp).toDate(),
     );
   }

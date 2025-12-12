@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../../models/reward.dart';
+import '../../../models/voucher.dart';
 import '../../../services/wardrobe_service.dart';
 
 class AdminUserBenefitPage extends StatelessWidget {
@@ -27,7 +30,9 @@ class AdminUserBenefitPage extends StatelessWidget {
             ],
           ),
         ),
+
         floatingActionButton: _buildFab(context),
+
         body: TabBarView(
           children: [
             _buildRewardTab(),
@@ -38,11 +43,11 @@ class AdminUserBenefitPage extends StatelessWidget {
     );
   }
 
-  // ----------------------------------------------------
-  // TAB 1 – Rewards (Map)
-  // ----------------------------------------------------
+  // =============================
+  // TAB PHẦN QUÀ
+  // =============================
   Widget _buildRewardTab() {
-    return StreamBuilder<List<Map<String, dynamic>>>(
+    return StreamBuilder<List<Reward>>(
       stream: service.getRewards(userId),
       builder: (_, snapshot) {
         if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
@@ -62,23 +67,22 @@ class AdminUserBenefitPage extends StatelessWidget {
               decoration: _box,
               child: Row(
                 children: [
-                  Text(r['icon'] ?? '🎁', style: const TextStyle(fontSize: 32)),
+                  Text(r.icon, style: const TextStyle(fontSize: 32)),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          r['title'] ?? '',
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                        Text(r['description'] ?? ''),
+                        Text(r.title,
+                            style: const TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold)),
+                        Text(r.description),
                       ],
                     ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () => service.deleteReward(userId, r['id']),
+                    onPressed: () => service.deleteReward(userId, r.id),
                   ),
                 ],
               ),
@@ -89,11 +93,11 @@ class AdminUserBenefitPage extends StatelessWidget {
     );
   }
 
-  // ----------------------------------------------------
-  // TAB 2 – Vouchers (Map)
-  // ----------------------------------------------------
+  // =============================
+  // TAB VOUCHER
+  // =============================
   Widget _buildVoucherTab() {
-    return StreamBuilder<List<Map<String, dynamic>>>(
+    return StreamBuilder<List<Voucher>>(
       stream: service.getVouchers(userId),
       builder: (_, snapshot) {
         if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
@@ -107,6 +111,8 @@ class AdminUserBenefitPage extends StatelessWidget {
           itemBuilder: (_, i) {
             final v = list[i];
 
+            final expiredText = v.expiredAt.toString().split(' ').first;
+
             return Container(
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(16),
@@ -114,21 +120,20 @@ class AdminUserBenefitPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text(v.title,
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text("Mã: ${v.code}"),
+                  Text("Giảm: ${v.discount}%"),
                   Text(
-                    v['title'] ?? '',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  Text("Mã: ${v['code'] ?? ''}"),
-                  Text("Giảm: ${v['discount'] ?? 0}%"),
-                  Text(
-                    "Hết hạn: ${v['expiredAt'].toString().split(' ').first}",
+                    "Hết hạn: $expiredText",
                     style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                   ),
                   Align(
                     alignment: Alignment.centerRight,
                     child: IconButton(
                       icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => service.deleteVoucher(userId, v['id']),
+                      onPressed: () => service.deleteVoucher(userId, v.id),
                     ),
                   ),
                 ],
@@ -140,9 +145,9 @@ class AdminUserBenefitPage extends StatelessWidget {
     );
   }
 
-  // ----------------------------------------------------
-  // FAB – Add reward / voucher
-  // ----------------------------------------------------
+  // =============================
+  // NÚT FAB
+  // =============================
   Widget _buildFab(BuildContext context) {
     return Builder(builder: (context) {
       final tabIndex = DefaultTabController.of(context).index;
@@ -161,13 +166,13 @@ class AdminUserBenefitPage extends StatelessWidget {
     });
   }
 
-  // ----------------------------------------------------
-  // Dialog Add Reward (Map)
-  // ----------------------------------------------------
+  // =============================
+  // POPUP THÊM PHẦN QUÀ
+  // =============================
   Future<void> _showAddRewardDialog(BuildContext context) async {
     final titleCtrl = TextEditingController();
     final descCtrl = TextEditingController();
-    final iconCtrl = TextEditingController(text: '🎁');
+    final iconCtrl = TextEditingController(text: "🎁");
 
     await showDialog(
       context: context,
@@ -185,14 +190,13 @@ class AdminUserBenefitPage extends StatelessWidget {
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Hủy')),
           ElevatedButton(
             onPressed: () async {
-              if (titleCtrl.text.isEmpty) return;
-
-              await service.addReward(userId, {
-                'title': titleCtrl.text,
-                'description': descCtrl.text,
-                'icon': iconCtrl.text,
-                'createdAt': DateTime.now(),
-              });
+              await service.addReward(userId, Reward(
+                id: '',
+                title: titleCtrl.text,
+                description: descCtrl.text,
+                icon: iconCtrl.text,
+                createdAt: DateTime.now(),
+              ));
 
               Navigator.pop(context);
             },
@@ -203,9 +207,9 @@ class AdminUserBenefitPage extends StatelessWidget {
     );
   }
 
-  // ----------------------------------------------------
-  // Dialog Add Voucher (Map)
-  // ----------------------------------------------------
+  // =============================
+  // POPUP THÊM VOUCHER
+  // =============================
   Future<void> _showAddVoucherDialog(BuildContext context) async {
     final titleCtrl = TextEditingController();
     final codeCtrl = TextEditingController();
@@ -254,15 +258,16 @@ class AdminUserBenefitPage extends StatelessWidget {
             TextButton(onPressed: () => Navigator.pop(context), child: const Text('Hủy')),
             ElevatedButton(
               onPressed: () async {
-                if (titleCtrl.text.isEmpty || codeCtrl.text.isEmpty) return;
-
-                await service.addVoucher(userId, {
-                  'title': titleCtrl.text,
-                  'code': codeCtrl.text,
-                  'discount': int.tryParse(discountCtrl.text) ?? 0,
-                  'expiredAt': expiredAt,
-                });
-
+                await service.addVoucher(
+                  userId,
+                  Voucher(
+                    id: '',
+                    title: titleCtrl.text,
+                    code: codeCtrl.text,
+                    discount: int.parse(discountCtrl.text),
+                    expiredAt: expiredAt,
+                  ),
+                );
                 Navigator.pop(context);
               },
               child: const Text('Lưu'),
@@ -273,15 +278,12 @@ class AdminUserBenefitPage extends StatelessWidget {
     );
   }
 
-  // ----------------------------------------------------
-  // Box style
-  // ----------------------------------------------------
   BoxDecoration get _box => BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Color.fromRGBO(0, 0, 0, 0.05),
             blurRadius: 6,
             offset: const Offset(0, 4),
           )

@@ -6,29 +6,27 @@ import 'firebase_options.dart';
 import 'pages/login_page.dart';
 import 'pages/register_screen.dart';
 
-// Home selector + staff/admin home
+// HOME
 import 'pages/home/home_selector.dart';
 import 'pages/home/notification_page.dart';
 import 'pages/home/home_staff_page.dart';
 
-// Wardrobe (TỦ ĐỒ USER)
+// USER WARDROBE (đúng theo hình bạn gửi)
 import 'pages/the_loan/wardrobe/wardrobe_page.dart';
 import 'pages/the_loan/wardrobe/reward_list_page.dart';
 import 'pages/the_loan/wardrobe/voucher_list_page.dart';
 import 'pages/the_loan/wardrobe/promotion_list_page.dart';
 
-
-// ADMIN – Quản lý quà & voucher
+// ADMIN – USER BENEFIT
 import 'pages/admin/wardrobe/admin_user_list_page.dart';
-// removed unused admin user benefit import
+import 'pages/admin/wardrobe/admin_user_benefit_page.dart';
 
-// ADMIN – Quản lý ưu đãi
+// ADMIN – PROMOTION
 import 'pages/admin/promotion/admin_promotion_list.dart';
 import 'pages/admin/promotion/admin_promotion_form.dart';
 
-// Theme
+// THEME
 import 'package:fl_credit/theme/app_theme.dart';
-
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,12 +34,11 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  runApp( MyApp());
+  runApp(const MyApp());
 }
 
-
 class MyApp extends StatelessWidget {
-   MyApp({super.key});
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -53,30 +50,38 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
 
-routes: {
-  '/': (context) => LoginPage(),
-  '/register': (context) => RegisterPage(),
+      routes: {
+        '/': (context) => LoginPage(),
+        '/register': (context) => RegisterPage(),
 
-  '/home': (context) => HomeSelectorPage(),
-  '/notifications': (context) => NotificationsPage(),
+        '/home': (context) => HomeSelectorPage(),
+        '/notifications': (context) => NotificationsPage(),
 
-  '/staffHome': (context) => HomeStaffPage(userRole: 'staff'),
-  '/adminHome': (context) => HomeStaffPage(userRole: 'admin'),
+        '/staffHome': (context) => HomeStaffPage(userRole: 'staff'),
+        '/adminHome': (context) => HomeStaffPage(userRole: 'admin'),
 
-  // Wardrobe
-  '/wardrobe': (context) => WardrobePage(),
-  '/rewards': (context) => RewardListPage(),
-  '/vouchers': (context) => VoucherListPage(),
-  '/promotions': (context) => PromotionListPage(),
+        // USER WARDROBE
+        '/wardrobe': (context) => WardrobePage(),
+        '/rewards': (context) => RewardListPage(),
+        '/vouchers': (context) => VoucherListPage(),
+        '/promotions': (context) => PromotionListPage(),
 
-  // Admin
-  '/admin-user-list': (context) => AdminUserListPage(),
-  '/admin-promotions': (context) => AdminPromotionList(),
-  '/admin-promotion-create': (context) => AdminPromotionForm(),
-}
+        // ADMIN USER LIST
+        '/admin-user-list': (context) => AdminUserListPage(),
 
+        // ADMIN user benefit
+        '/admin-user-benefit': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map;
+          return AdminUserBenefitPage(
+            userId: args['userId'],
+            userName: args['userName'],
+          );
+        },
 
-,
+        // ADMIN PROMOTION
+        '/admin-promotions': (context) => AdminPromotionList(),
+        '/admin-promotion-create': (context) => AdminPromotionForm(),
+      },
     );
   }
 }

@@ -12,7 +12,6 @@ class AppTheme {
     colorScheme: ColorScheme.light(
       primary: primaryColor,
       secondary: secondaryColor,
-      background: backgroundColor,
       surface: surfaceColor,
       error: errorColor,
     ),
@@ -53,7 +52,6 @@ class AppTheme {
     colorScheme: ColorScheme.dark(
       primary: primaryColor,
       secondary: secondaryColor,
-      background: Colors.black,
       surface: Colors.grey.shade900,
       error: errorColor,
     ),

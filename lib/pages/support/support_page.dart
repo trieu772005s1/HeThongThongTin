@@ -156,7 +156,7 @@ Future<void> sendEmail() async {
         onTap: onTap,
         leading: CircleAvatar(
           radius: 20,
-          backgroundColor: iconColor.withOpacity(0.08),
+          backgroundColor: Color.fromRGBO(iconColor.red, iconColor.green, iconColor.blue, 0.08),
           child: Icon(icon, color: iconColor),
         ),
         title: Text(

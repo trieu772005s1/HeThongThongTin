@@ -21,7 +21,6 @@ class HomeStaffPage extends StatelessWidget {
             onPressed: () async {
               await AuthService().signOut();
               if (!context.mounted) return;
-              // Xoá stack và quay về màn login
               Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
             },
           ),
@@ -54,8 +53,26 @@ class HomeStaffPage extends StatelessWidget {
               },
             ),
             cardTile(context, 'Cập nhật thanh toán', onTap: () {}),
+
             if (isAdmin) cardTile(context, 'Xóa hợp đồng', onTap: () {}),
             if (isAdmin) cardTile(context, 'Quản lý nhân viên', onTap: () {}),
+            cardTile(
+              context,
+              'Tạo voucher',
+               onTap: () {
+                Navigator.pushNamed(context, '/admin-user-list');
+              },
+          ),
+
+            // ⭐ THÊM MENU QUẢN LÝ VOUCHER / QUÀ
+            if (isAdmin)
+              cardTile(
+                context,
+                'Quản lý quà & voucher',
+                onTap: () {
+                  Navigator.pushNamed(context, '/admin-user-list');
+                },
+              ),
           ],
         ),
       ),
@@ -71,10 +88,7 @@ class HomeStaffPage extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: 16,
-        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         title: Text(title, style: const TextStyle(fontSize: 18)),
         trailing: const Icon(Icons.arrow_forward_ios, size: 18),
         onTap: onTap,

@@ -80,6 +80,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     }
 
     if (verified) {
+      if (!mounted) return;
       Navigator.push(
         context,
         MaterialPageRoute(

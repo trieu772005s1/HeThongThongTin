@@ -75,6 +75,7 @@ class _LoanStep2_1State extends State<LoanStep2_1> {
       );
 
       // Pop ra LoanStep2Page, trả kết quả
+      if (!mounted) return;
       Navigator.pop(context, completed == true);
     } catch (e) {
       ScaffoldMessenger.of(
