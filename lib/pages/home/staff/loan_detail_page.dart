@@ -1,265 +1,329 @@
 // lib/pages/home/staff/loan_detail_page.dart
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 class LoanDetailPage extends StatelessWidget {
   const LoanDetailPage({super.key});
 
-  String _shorten(String s, {int keep = 18}) {
-    if (s.isEmpty) return s;
-    if (s.length <= keep) return s;
-    return '${s.substring(0, keep)}...';
-  }
-
-  String _formatTimestamp(dynamic t) {
-    if (t == null) return '';
-    if (t is Timestamp) {
-      final d = t.toDate();
-      return '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')} ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}:${d.second.toString().padLeft(2, '0')}';
-    }
-    return t.toString();
-  }
-
   @override
   Widget build(BuildContext context) {
-    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-    final loanId = args?['loanId'] as String?;
-    if (loanId == null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Chi tiết')),
-        body: const Center(child: Text('Không tìm thấy loanId')),
-      );
-    }
-
-    final loanRef = FirebaseFirestore.instance.collection('loans').doc(loanId);
-    final repaymentsRef = loanRef.collection('repayments').orderBy('createdAt', descending: true);
+    final args =
+        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    final String loanId = args['loanId'];
+    final bool isAdmin = args['isAdmin'] ?? false;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Chi tiết: $loanId', overflow: TextOverflow.ellipsis),
-        elevation: 1,
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Loan info (streamed)
-            StreamBuilder<DocumentSnapshot>(
-              stream: loanRef.snapshots(),
-              builder: (context, loanSnap) {
-                if (loanSnap.connectionState == ConnectionState.waiting) {
-                  return const Padding(
-                    padding: EdgeInsets.all(20),
-                    child: LinearProgressIndicator(),
-                  );
-                }
-                if (!loanSnap.hasData || !loanSnap.data!.exists) {
-                  return Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Text('Hợp đồng không tồn tại', style: Theme.of(context).textTheme.bodyLarge),
-                      ),
-                    ),
-                  );
-                }
+      backgroundColor: const Color(0xFFF3F8FF),
+      appBar: AppBar(title: const Text('Chi tiết hợp đồng'), centerTitle: true),
+      body: StreamBuilder<DocumentSnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('loans')
+            .doc(loanId)
+            .snapshots(),
+        builder: (context, snap) {
+          if (!snap.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-                final data = loanSnap.data!.data() as Map<String, dynamic>;
-                final customerId = (data['customerId'] ?? '').toString();
-                final amount = data['amount']?.toString() ?? '-';
-                final interest = data['interestRate']?.toString() ?? '-';
-                final term = data['termMonths']?.toString() ?? '-';
-                final status = data['status']?.toString() ?? '-';
-                final createdAt = _formatTimestamp(data['createdAt']);
-                final updatedAt = _formatTimestamp(data['updatedAt']);
+          final data = (snap.data!.data() ?? {}) as Map<String, dynamic>;
+          final status = (data['status'] ?? 'pending').toString();
+          final customerId = (data['customerId'] ?? '').toString();
 
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  child: Card(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    elevation: 0,
-                    child: Padding(
-                      padding: const EdgeInsets.all(14),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // customer id in a small rounded box to avoid long single-line overflow
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade100,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              'Khách hàng: ${_shorten(customerId, keep: 40)}',
-                              style: const TextStyle(fontWeight: FontWeight.w600),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Wrap(
-                            runSpacing: 6,
-                            spacing: 16,
-                            children: [
-                              _smallInfo('Số tiền', amount),
-                              _smallInfo('Lãi suất', '$interest%'),
-                              _smallInfo('Kỳ hạn', '$term tháng'),
-                              _smallInfo('Trạng thái', status),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          Text('Tạo: $createdAt', style: const TextStyle(fontSize: 12, color: Colors.black54)),
-                          if (updatedAt.isNotEmpty)
-                            Text('Cập nhật: $updatedAt', style: const TextStyle(fontSize: 12, color: Colors.black54)),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
+          // fetch customer doc (if any) so we can show name / phone from users collection
+          return FutureBuilder<DocumentSnapshot>(
+            future: customerId.isNotEmpty
+                ? FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(customerId)
+                      .get()
+                : Future.value(null),
+            builder: (context, userSnap) {
+              String customerName = data['customerName']?.toString() ?? '';
+              String phone = data['phone']?.toString() ?? '';
+              if (userSnap.connectionState == ConnectionState.done &&
+                  userSnap.hasData &&
+                  userSnap.data!.exists) {
+                final u = (userSnap.data!.data() ?? {}) as Map<String, dynamic>;
+                customerName =
+                    (u['full_name'] ??
+                            u['fullName'] ??
+                            u['name'] ??
+                            customerName ??
+                            '')
+                        .toString();
+                phone = (u['phone'] ?? u['phoneNumber'] ?? phone ?? '')
+                    .toString();
+              }
 
-            // Buttons row
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Row(
+              return ListView(
+                padding: const EdgeInsets.all(16),
                 children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        // mở trang cập nhật thanh toán (nếu bạn có route)
-                        Navigator.pushNamed(context, '/repaymentList', arguments: {'loanId': loanId});
-                      },
-                      icon: const Icon(Icons.payment_outlined),
-                      label: const Text('Thanh toán / Quản lý'),
-                      style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
+                  _summaryCard(data),
+                  const SizedBox(height: 16),
+
+                  _section('Thông tin khách hàng'),
+                  _infoCard([
+                    _row(
+                      'Họ tên',
+                      customerName.isNotEmpty
+                          ? customerName
+                          : (customerId.isNotEmpty ? customerId : '-'),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  ElevatedButton(
-                    onPressed: () async {
-                      // quick add dialog
-                      final ctrl = TextEditingController();
-                      final ok = await showDialog<bool>(
-                        context: context,
-                        builder: (c) => AlertDialog(
-                          title: const Text('Thêm thanh toán nhanh'),
-                          content: TextField(
-                            controller: ctrl,
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(labelText: 'Số tiền'),
-                          ),
-                          actions: [
-                            TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Hủy')),
-                            ElevatedButton(onPressed: () => Navigator.pop(c, true), child: const Text('Thêm')),
-                          ],
-                        ),
-                      );
-                      if (ok == true && ctrl.text.trim().isNotEmpty) {
-                        final v = double.tryParse(ctrl.text.trim()) ?? 0;
-                        await loanRef.collection('repayments').add({
-                          'amount': v,
-                          'status': 'paid',
-                          'createdAt': FieldValue.serverTimestamp(),
-                        });
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã thêm thanh toán')));
-                        }
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
-                      backgroundColor: Colors.grey[200],
-                      foregroundColor: Colors.black87,
+                    _row('SĐT', phone.isNotEmpty ? phone : '-'),
+                    _row('CCCD / ID', customerId.isNotEmpty ? customerId : '-'),
+                  ]),
+
+                  const SizedBox(height: 12),
+                  _section('Thông tin khoản vay'),
+                  _infoCard([
+                    _row('Số tiền vay', _money(data['amount'])),
+                    _row(
+                      'Kỳ hạn',
+                      '${data['termMonths'] ?? data['tenure'] ?? '-'} tháng',
                     ),
-                    child: const Icon(Icons.add),
-                  )
-                ],
-              ),
-            ),
+                    _row(
+                      'Lãi suất',
+                      '${data['interestRate'] ?? data['interest'] ?? '-'} %',
+                    ),
+                    _row(
+                      'Ngày bắt đầu',
+                      _tsDate(data['startDate'] ?? data['createdAt']),
+                    ),
+                    _row('Ngày tạo', _tsDate(data['createdAt'])),
+                  ]),
 
-            const SizedBox(height: 12),
+                  const SizedBox(height: 16),
+                  _section('Trạng thái xử lý'),
+                  _statusTimeline(status),
 
-            // Title for repayments
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text('Thanh toán (repayments)', style: Theme.of(context).textTheme.titleMedium)),
-            ),
-            const SizedBox(height: 8),
+                  const SizedBox(height: 24),
 
-            // Repayments list — use Expanded so list scrolls without overflow
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: StreamBuilder<QuerySnapshot>(
-                  stream: repaymentsRef.snapshots(),
-                  builder: (context, snap) {
-                    if (snap.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    final docs = snap.data?.docs ?? [];
-                    if (docs.isEmpty) {
-                      return const Center(child: Text('Chưa có thanh toán nào.'));
-                    }
-
-                    return ListView.separated(
-                      itemCount: docs.length,
-                      separatorBuilder: (c, i) => const SizedBox(height: 8),
-                      itemBuilder: (c, i) {
-                        final d = docs[i];
-                        final m = d.data() as Map<String, dynamic>;
-                        final amount = (m['amount'] ?? '').toString();
-                        final status = (m['status'] ?? '').toString();
-                        final created = _formatTimestamp(m['createdAt']);
-
-                        return Card(
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                            title: Text('Số tiền: $amount', style: const TextStyle(fontWeight: FontWeight.w600)),
-                            subtitle: Text('Trạng thái: $status${created.isNotEmpty ? ' · $created' : ''}'),
-                            trailing: PopupMenuButton<String>(
-                              onSelected: (v) async {
-                                if (v == 'delete') {
-                                  await d.reference.delete();
-                                } else if (v == 'mark_paid') {
-                                  await d.reference.update({'status': 'paid'});
-                                } else if (v == 'mark_scheduled') {
-                                  await d.reference.update({'status': 'scheduled'});
-                                }
-                              },
-                              itemBuilder: (_) => [
-                                const PopupMenuItem(value: 'mark_paid', child: Text('Đánh dấu đã trả')),
-                                const PopupMenuItem(value: 'mark_scheduled', child: Text('Đặt lịch')),
-                                const PopupMenuItem(value: 'delete', child: Text('Xóa')),
-                              ],
+                  // ===== ACTIONS =====
+                  if (status == 'pending') ...[
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            icon: const Icon(Icons.check),
+                            label: const Text('Duyệt'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
                             ),
+                            onPressed: () =>
+                                _updateStatus(context, loanId, 'approved'),
                           ),
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-            ),
-          ],
-        ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            icon: const Icon(Icons.close),
+                            label: const Text('Từ chối'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orange,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                            ),
+                            onPressed: () =>
+                                _updateStatus(context, loanId, 'rejected'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+
+                  if (isAdmin) ...[
+                    const SizedBox(height: 12),
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.delete_forever),
+                      label: const Text('Xóa hợp đồng (Admin)'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.redAccent,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      onPressed: () => _deleteLoan(context, loanId),
+                    ),
+                  ],
+                ],
+              );
+            },
+          );
+        },
       ),
     );
   }
 
-  Widget _smallInfo(String title, String value) {
+  // ================= UI =================
+
+  Widget _summaryCard(Map data) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(8)),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(title, style: const TextStyle(fontSize: 12, color: Colors.black54)),
-        const SizedBox(height: 6),
-        Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
-      ]),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF0D47A1), Color(0xFF1976D2)],
+        ),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Giá trị hợp đồng',
+            style: TextStyle(color: Colors.white70),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            _money(data['amount']),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 26,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
     );
+  }
+
+  Widget _section(String text) => Padding(
+    padding: const EdgeInsets.only(bottom: 6),
+    child: Text(
+      text,
+      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+    ),
+  );
+
+  Widget _infoCard(List<Widget> children) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(children: children),
+    );
+  }
+
+  Widget _row(String label, dynamic value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(label, style: const TextStyle(color: Colors.black54)),
+          ),
+          Text(
+            value?.toString() ?? '-',
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _statusTimeline(String status) {
+    final steps = ['pending', 'approved', 'rejected'];
+
+    return Column(
+      children: steps.map((s) {
+        final active = status == s;
+        return ListTile(
+          leading: Icon(
+            active ? Icons.check_circle : Icons.radio_button_unchecked,
+            color: active ? Colors.green : Colors.grey,
+          ),
+          title: Text(
+            _statusText(s),
+            style: TextStyle(
+              fontWeight: active ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  // ================= LOGIC =================
+
+  static Future<void> _updateStatus(
+    BuildContext context,
+    String id,
+    String status,
+  ) async {
+    await FirebaseFirestore.instance.collection('loans').doc(id).update({
+      'status': status,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Đã cập nhật trạng thái')));
+    }
+  }
+
+  static Future<void> _deleteLoan(BuildContext context, String id) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Xác nhận xóa'),
+        content: const Text('Hành động này không thể hoàn tác.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Hủy'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Xóa'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      // delete repayments subcollection first (best-effort)
+      final loanRef = FirebaseFirestore.instance.collection('loans').doc(id);
+      final snaps = await loanRef.collection('repayments').limit(500).get();
+      final batch = FirebaseFirestore.instance.batch();
+      for (final d in snaps.docs) batch.delete(d.reference);
+      batch.delete(loanRef);
+      await batch.commit();
+
+      if (context.mounted) Navigator.pop(context);
+    }
+  }
+
+  // ================= UTILS =================
+
+  static String _money(dynamic v) {
+    num val = 0;
+    if (v is num)
+      val = v;
+    else if (v is String)
+      val = num.tryParse(v.replaceAll(',', '')) ?? 0;
+    return NumberFormat.currency(locale: 'vi', symbol: '₫').format(val);
+  }
+
+  static String _tsDate(dynamic t) {
+    if (t == null) return '-';
+    if (t is Timestamp) return DateFormat('dd/MM/yyyy').format(t.toDate());
+    try {
+      final parsed = DateTime.parse(t.toString());
+      return DateFormat('dd/MM/yyyy').format(parsed);
+    } catch (_) {
+      return t.toString();
+    }
+  }
+
+  static String _statusText(String s) {
+    switch (s) {
+      case 'approved':
+        return 'Đã duyệt';
+      case 'rejected':
+        return 'Từ chối';
+      default:
+        return 'Chờ duyệt';
+    }
   }
 }

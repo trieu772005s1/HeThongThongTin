@@ -301,7 +301,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
             MaterialPageRoute(builder: (_) => const WardrobePage()),
           );
         }),
-        _buildFuncItem(Icons.location_on, 'Điểm giao dịch', () {}),
+
         _buildFuncItem(Icons.support_agent, 'Hỗ trợ', () {
           Navigator.push(
             context,

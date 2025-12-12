@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_credit/services/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_credit/services/firestore_service.dart';
-
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -18,7 +16,7 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
 
   final _authService = AuthService();
-  final _firestoreService = FirestoreService(); 
+  final _firestoreService = FirestoreService();
   bool _isLoading = false;
 
   @override
@@ -28,43 +26,32 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-    Future<void> _login() async {
+  Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
     try {
-      // Đăng nhập Firebase Auth
       await _authService.signInWithEmail(
         _emailController.text.trim(),
         _passwordController.text.trim(),
       );
 
       final user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
-        throw 'Không lấy được thông tin người dùng';
-      }
+      if (user == null) throw 'Không lấy được thông tin người dùng';
 
-      // Lấy hồ sơ user từ Firestore để xem role
       final doc = await _firestoreService.getUserProfile(user.uid);
       final data = doc.data();
       final role = (data?['role'] ?? 'customer') as String;
 
       if (!mounted) return;
 
-      String nextRoute;
-      if (role == 'staff') {
-        nextRoute = '/staffHome';
-      } else if (role == 'admin') {
-        nextRoute = '/adminHome';
-      } else {
-        nextRoute = '/home'; // customer
-      }
+      String nextRoute = role == 'staff'
+          ? '/staffHome'
+          : role == 'admin'
+          ? '/adminHome'
+          : '/home';
 
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        nextRoute,
-        (route) => false,
-      );
+      Navigator.pushNamedAndRemoveUntil(context, nextRoute, (route) => false);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -72,31 +59,6 @@ class _LoginPageState extends State<LoginPage> {
       ).showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
       if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-
-  Future<void> _resetPassword() async {
-    final email = _emailController.text.trim();
-
-    if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng nhập email trước')),
-      );
-      return;
-    }
-
-    try {
-      await _authService.sendPasswordResetEmail(email);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Đã gửi email đặt lại mật khẩu')),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.toString())));
     }
   }
 
@@ -136,6 +98,8 @@ class _LoginPageState extends State<LoginPage> {
                   style: TextStyle(fontSize: 16, color: Colors.white70),
                 ),
                 const SizedBox(height: 28),
+
+                // FORM CONTAINER
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
@@ -149,6 +113,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ],
                   ),
+
                   child: Form(
                     key: _formKey,
                     child: Column(
@@ -156,7 +121,6 @@ class _LoginPageState extends State<LoginPage> {
                         TextFormField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
-                          style: const TextStyle(color: Colors.black),
                           decoration: InputDecoration(
                             labelText: 'Email',
                             prefixIcon: const Icon(Icons.email),
@@ -176,11 +140,12 @@ class _LoginPageState extends State<LoginPage> {
                             return null;
                           },
                         ),
+
                         const SizedBox(height: 16),
+
                         TextFormField(
                           controller: _passwordController,
                           obscureText: true,
-                          style: const TextStyle(color: Colors.black),
                           decoration: InputDecoration(
                             labelText: 'Mật khẩu',
                             prefixIcon: const Icon(Icons.lock),
@@ -196,7 +161,9 @@ class _LoginPageState extends State<LoginPage> {
                             return null;
                           },
                         ),
+
                         const SizedBox(height: 24),
+
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
@@ -209,13 +176,9 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                             child: _isLoading
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
+                                ? const CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
                                   )
                                 : const Text(
                                     'Đăng nhập',
@@ -226,12 +189,26 @@ class _LoginPageState extends State<LoginPage> {
                                   ),
                           ),
                         ),
+
                         const SizedBox(height: 8),
+
+                        // ✔ BUTTON QUÊN MẬT KHẨU
                         TextButton(
-                          onPressed: _resetPassword,
-                          child: const Text('Quên mật khẩu?'),
+                          onPressed: () {
+                            Navigator.pushNamed(context, "/forgotPassword");
+                          },
+                          child: const Text(
+                            "Quên mật khẩu?",
+                            style: TextStyle(
+                              color: Color(0xFF1976D2),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
+
                         const SizedBox(height: 8),
+
+                        // ĐĂNG KÝ
                         TextButton(
                           onPressed: () {
                             Navigator.pushNamed(context, '/register');
