@@ -3,8 +3,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
 import 'package:fl_credit/theme/app_theme.dart';
-import 'package:fl_credit/pages/login_page.dart';
-import 'package:fl_credit/pages/register_screen.dart';
+import 'package:fl_credit/pages/auth/login_page.dart';
+import 'package:fl_credit/pages/auth/register_screen.dart';
 import 'package:fl_credit/pages/home/customer/home_customer_page.dart';
 
 // Home selector
@@ -21,7 +21,6 @@ import 'package:fl_credit/pages/home/staff/loan_list_page.dart';
 import 'package:fl_credit/pages/home/staff/loan_detail_page.dart';
 import 'package:fl_credit/pages/home/staff/repayment_list_page.dart';
 import 'package:fl_credit/pages/home/staff/loan_contract_page.dart';
-
 
 // Staff management
 import 'package:fl_credit/pages/home/staff/staff_management_page.dart';
@@ -51,12 +50,11 @@ class MyApp extends StatelessWidget {
         '/register': (context) => const RegisterPage(),
 
         // Kiểm tra role
-       '/home': (context) {
-       final args = ModalRoute.of(context)!.settings.arguments as Map?;
-       final userRole = args?['userRole'] ?? 'customers'; // fallback
-       return HomeSelectorPage(userRole: userRole);
-       },
-
+        '/home': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map?;
+          final userRole = args?['userRole'] ?? 'customers'; // fallback
+          return HomeSelectorPage(userRole: userRole);
+        },
 
         // Thông báo
         '/notifications': (context) => const NotificationsPage(),
@@ -64,8 +62,8 @@ class MyApp extends StatelessWidget {
         // Staff/Admin home
         '/staffHome': (context) => const HomeStaffPage(userRole: 'staff'),
         '/adminHome': (context) => const HomeStaffPage(userRole: 'admin'),
-         
-           // Customer home (placeholder) - replace with your real page
+
+        // Customer home (placeholder) - replace with your real page
         '/customerHome': (context) => const HomeCustomerPage(),
         // Loan pages
         '/loanList': (ctx) => const LoanListPage(),

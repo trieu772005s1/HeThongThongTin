@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_credit/models/loan.dart';
-import 'package:fl_credit/pages/the_loan/the_loan_detail_page.dart';
+import 'package:fl_credit/pages/home/customer/the_loan/the_loan_detail_page.dart';
 
 class TheLoanPage extends StatefulWidget {
   final List<Loan> loans;

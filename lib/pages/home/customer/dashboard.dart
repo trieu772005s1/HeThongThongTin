@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:fl_credit/pages/support/support_page.dart';
-import 'package:fl_credit/pages/wardrobe/wardrobe_page.dart';
-import 'package:fl_credit/pages/loan_online/loan_step/loan_step_page.dart';
-import 'package:fl_credit/pages/loan_online/loan_step/steps/account_verification_page.dart';
+import 'package:fl_credit/pages/home/customer/support/support_page.dart';
+import 'package:fl_credit/pages/home/customer/wardrobe/wardrobe_page.dart';
+import 'package:fl_credit/pages/home/customer/loan_online/loan_step/loan_step_page.dart';
+import 'package:fl_credit/pages/home/customer/loan_online/loan_step/steps/account_verification_page.dart';
 
 class CustomerDashboard extends StatefulWidget {
   const CustomerDashboard({super.key});
@@ -297,16 +297,16 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
         }),
         _buildFuncItem(Icons.shopping_bag, 'Tủ đồ', () {
           Navigator.push(
-    context,
-    MaterialPageRoute(builder: (_) => const WardrobePage()),
-            );
+            context,
+            MaterialPageRoute(builder: (_) => const WardrobePage()),
+          );
         }),
         _buildFuncItem(Icons.location_on, 'Điểm giao dịch', () {}),
         _buildFuncItem(Icons.support_agent, 'Hỗ trợ', () {
-           Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const SupportPage()),
-  );
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const SupportPage()),
+          );
         }),
       ],
     );

@@ -6,15 +6,19 @@ class StaffManagementPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final usersRef = FirebaseFirestore.instance.collection('users').orderBy('createdAt', descending: true);
+    final usersRef = FirebaseFirestore.instance
+        .collection('users')
+        .orderBy('createdAt', descending: true);
     return Scaffold(
       appBar: AppBar(title: const Text('Quản lý nhân viên')),
       body: StreamBuilder<QuerySnapshot>(
         stream: usersRef.snapshots(),
         builder: (context, snap) {
-          if (snap.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+          if (snap.connectionState == ConnectionState.waiting)
+            return const Center(child: CircularProgressIndicator());
           final docs = snap.data?.docs ?? [];
-          if (docs.isEmpty) return const Center(child: Text('Chưa có user nào.'));
+          if (docs.isEmpty)
+            return const Center(child: Text('Chưa có user nào.'));
           return ListView.builder(
             itemCount: docs.length,
             itemBuilder: (context, i) {
@@ -28,14 +32,25 @@ class StaffManagementPage extends StatelessWidget {
                   subtitle: Text('Email: ${data['email'] ?? ''} · Role: $role'),
                   trailing: PopupMenuButton<String>(
                     onSelected: (v) {
-                      if (v == 'makeAdmin') d.reference.update({'role': 'admin'});
-                      if (v == 'makeStaff') d.reference.update({'role': 'staff'});
+                      if (v == 'makeAdmin')
+                        d.reference.update({'role': 'admin'});
+                      if (v == 'makeStaff')
+                        d.reference.update({'role': 'staff'});
                       if (v == 'delete') d.reference.delete();
                     },
                     itemBuilder: (_) => [
-                      const PopupMenuItem(value: 'makeAdmin', child: Text('Đặt làm admin')),
-                      const PopupMenuItem(value: 'makeStaff', child: Text('Đặt làm staff')),
-                      const PopupMenuItem(value: 'delete', child: Text('Xóa user')),
+                      const PopupMenuItem(
+                        value: 'makeAdmin',
+                        child: Text('Đặt làm admin'),
+                      ),
+                      const PopupMenuItem(
+                        value: 'makeStaff',
+                        child: Text('Đặt làm staff'),
+                      ),
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Text('Xóa user'),
+                      ),
                     ],
                   ),
                 ),

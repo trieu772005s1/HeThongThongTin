@@ -1,9 +1,9 @@
-import 'package:fl_credit/pages/the_loan/contract/view_contract_page.dart';
-import 'package:fl_credit/pages/the_loan/payment/pay_loan_page.dart';
+import 'package:fl_credit/pages/home/customer/the_loan/contract/view_contract_page.dart';
+import 'package:fl_credit/pages/home/customer/the_loan/payment/pay_loan_page.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_credit/models/loan.dart';
-import 'package:fl_credit/pages/the_loan/payment/payment_schedule_page.dart';
+import 'package:fl_credit/pages/home/customer/the_loan/payment/payment_schedule_page.dart';
 
 class TheLoanDetailPage extends StatelessWidget {
   final Loan loan;

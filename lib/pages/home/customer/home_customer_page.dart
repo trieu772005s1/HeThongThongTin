@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:fl_credit/models/loan.dart';
-import 'package:fl_credit/pages/card/card_start_page.dart';
+import 'package:fl_credit/pages/home/customer/card/card_start_page.dart';
 import 'package:fl_credit/pages/home/customer/dashboard.dart';
 import 'package:fl_credit/pages/home/customer/profile_page.dart';
-import 'package:fl_credit/pages/the_loan/the_loan_page.dart';
+import 'package:fl_credit/pages/home/customer/the_loan/the_loan_page.dart';
 
 class HomeCustomerPage extends StatefulWidget {
   const HomeCustomerPage({super.key});

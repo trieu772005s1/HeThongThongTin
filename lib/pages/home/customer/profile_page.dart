@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_credit/services/auth_service.dart';
-import 'package:fl_credit/pages/login_page.dart';
+import 'package:fl_credit/pages/auth/login_page.dart';
 import 'package:fl_credit/pages/auth/change_password_page.dart';
-import 'package:fl_credit/pages/support/support_page.dart';
-import 'package:fl_credit/pages/terms/loan_terms_page.dart';
-import 'package:fl_credit/pages/terms/app_terms_page.dart';
-import 'package:fl_credit/pages/terms/privacy_page.dart';
+import 'package:fl_credit/pages/home/customer/support/support_page.dart';
+import 'package:fl_credit/pages/home/customer/terms/loan_terms_page.dart';
+import 'package:fl_credit/pages/home/customer/terms/app_terms_page.dart';
+import 'package:fl_credit/pages/home/customer/terms/privacy_page.dart';
 
 class ProfilePage extends StatelessWidget {
   ProfilePage({super.key});
