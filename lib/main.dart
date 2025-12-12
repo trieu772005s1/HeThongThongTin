@@ -72,6 +72,7 @@ class MyApp extends StatelessWidget {
         '/loanContract': (context) => const LoanContractPage(),
         '/loanDetail': (ctx) => const LoanDetailPage(),
         '/repaymentList': (ctx) => const RepaymentListPage(),
+        '/loanDetail': (context) => const LoanDetailPage(),
 
         // Staff
         '/staffManagement': (ctx) => const StaffManagementPage(),

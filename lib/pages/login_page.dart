@@ -4,7 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_credit/services/firestore_service.dart';
 
-
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -18,7 +17,7 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
 
   final _authService = AuthService();
-  final _firestoreService = FirestoreService(); 
+  final _firestoreService = FirestoreService();
   bool _isLoading = false;
 
   @override
@@ -28,7 +27,7 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-    Future<void> _login() async {
+  Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
@@ -60,11 +59,7 @@ class _LoginPageState extends State<LoginPage> {
         nextRoute = '/home'; // customer
       }
 
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        nextRoute,
-        (route) => false,
-      );
+      Navigator.pushNamedAndRemoveUntil(context, nextRoute, (route) => false);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -75,7 +70,6 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-
   Future<void> _resetPassword() async {
     final email = _emailController.text.trim();
 
@@ -84,7 +78,7 @@ class _LoginPageState extends State<LoginPage> {
         const SnackBar(content: Text('Vui lòng nhập email trước')),
       );
       return;
-    }
+    } 
 
     try {
       await _authService.sendPasswordResetEmail(email);
