@@ -74,22 +74,13 @@ class _HomeCustomerPageState extends State<HomeCustomerPage> {
             children: [
               _navItem(icon: Icons.home, label: 'Trang chủ', index: 0),
               _navItem(icon: Icons.attach_money, label: 'Khoản vay', index: 1),
-              const SizedBox(width: 48),
+
               _navItem(icon: Icons.credit_card, label: 'Thẻ', index: 3),
               _navItem(icon: Icons.person, label: 'Cá nhân', index: 4),
             ],
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // ví dụ: chuyển sang index 2 khi bấm FAB
-          // setState(() => _currentIndex = 2);
-        },
-        backgroundColor: const Color(0xFF1976D2),
-        child: const Icon(Icons.add, size: 32, color: Colors.white),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 

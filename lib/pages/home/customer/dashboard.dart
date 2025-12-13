@@ -308,6 +308,9 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
             MaterialPageRoute(builder: (_) => const SupportPage()),
           );
         }),
+        _buildFuncItem(Icons.location_on, 'Điểm giao dịch', () {
+          Navigator.pushNamed(context, '/transactionPoints');
+        }),
       ],
     );
   }

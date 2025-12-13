@@ -24,6 +24,8 @@ import 'package:fl_credit/pages/home/staff/loan_contract_page.dart';
 
 // Staff management
 import 'package:fl_credit/pages/home/staff/staff_management_page.dart';
+//Transaction Page
+import 'package:fl_credit/pages/home/customer/location/transaction_point_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -73,6 +75,8 @@ class MyApp extends StatelessWidget {
 
         // Staff
         '/staffManagement': (ctx) => const StaffManagementPage(),
+        // Transaction Points
+        '/transactionPoints': (ctx) => const TransactionPointPage(),
       },
     );
   }
