@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_credit/services/auth_service.dart';
 
+import 'admin_card_approval_page.dart';
+
 class HomeStaffPage extends StatelessWidget {
   final String userRole;
 
   const HomeStaffPage({super.key, required this.userRole});
 
-  bool get isAdmin => userRole == 'admin';
+  bool get isAdmin => userRole.toLowerCase() == 'admin';
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +34,7 @@ class HomeStaffPage extends StatelessWidget {
                   builder: (context, box) {
                     const spacing = 12.0;
                     final width = box.maxWidth;
-                    int cols = width < 420 ? 1 : (width < 700 ? 2 : 3);
+                    final int cols = width < 420 ? 1 : (width < 700 ? 2 : 3);
                     final itemW = (width - spacing * (cols - 1)) / cols;
 
                     return Wrap(
@@ -47,9 +49,8 @@ class HomeStaffPage extends StatelessWidget {
                             query: FirebaseFirestore.instance.collection(
                               'loans',
                             ),
-                            onTap: () {
-                              Navigator.pushNamed(context, '/loanList');
-                            },
+                            onTap: () =>
+                                Navigator.pushNamed(context, '/loanList'),
                           ),
                         ),
                         SizedBox(
@@ -60,13 +61,11 @@ class HomeStaffPage extends StatelessWidget {
                             query: FirebaseFirestore.instance
                                 .collection('loans')
                                 .where('status', isEqualTo: 'pending'),
-                            onTap: () {
-                              Navigator.pushNamed(
-                                context,
-                                '/loanList',
-                                arguments: {'status': 'pending'},
-                              );
-                            },
+                            onTap: () => Navigator.pushNamed(
+                              context,
+                              '/loanList',
+                              arguments: {'status': 'pending'},
+                            ),
                           ),
                         ),
                         SizedBox(
@@ -77,13 +76,11 @@ class HomeStaffPage extends StatelessWidget {
                             query: FirebaseFirestore.instance
                                 .collection('loans')
                                 .where('status', isEqualTo: 'rejected'),
-                            onTap: () {
-                              Navigator.pushNamed(
-                                context,
-                                '/loanList',
-                                arguments: {'status': 'rejected'},
-                              );
-                            },
+                            onTap: () => Navigator.pushNamed(
+                              context,
+                              '/loanList',
+                              arguments: {'status': 'rejected'},
+                            ),
                           ),
                         ),
                       ],
@@ -135,6 +132,23 @@ class HomeStaffPage extends StatelessWidget {
                       onTap: () =>
                           Navigator.pushNamed(context, '/notifications'),
                     ),
+
+                    // ✅ THÊM: DUYỆT THẺ (STAFF + ADMIN đều thấy)
+                    _actionCard(
+                      context,
+                      'Duyệt thẻ tín dụng',
+                      'Xét duyệt hồ sơ mở thẻ',
+                      Icons.credit_card,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const AdminCardApprovalPage(),
+                          ),
+                        );
+                      },
+                    ),
+
                     if (isAdmin)
                       _actionCard(
                         context,
@@ -159,8 +173,11 @@ class HomeStaffPage extends StatelessWidget {
                       .limit(6)
                       .snapshots(),
                   builder: (context, snap) {
-                    if (!snap.hasData) {
+                    if (snap.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator());
+                    }
+                    if (!snap.hasData) {
+                      return const Text('Không tải được dữ liệu');
                     }
 
                     final docs = snap.data!.docs;
@@ -168,7 +185,6 @@ class HomeStaffPage extends StatelessWidget {
                       return const Text('Chưa có hợp đồng nào');
                     }
 
-                    // Build a column of loan tiles; for each loan we fetch the user doc (if customerId present)
                     return Column(
                       children: docs.map((d) {
                         final data = d.data() as Map<String, dynamic>;
@@ -177,7 +193,6 @@ class HomeStaffPage extends StatelessWidget {
                         final amount = data['amount'] ?? '';
 
                         if (customerId.isEmpty) {
-                          // fallback when no customerId
                           return _loanTile(
                             context,
                             loanId: d.id,
@@ -186,7 +201,6 @@ class HomeStaffPage extends StatelessWidget {
                           );
                         }
 
-                        // FutureBuilder fetches the user doc to show name
                         return FutureBuilder<DocumentSnapshot>(
                           future: FirebaseFirestore.instance
                               .collection('users')
@@ -195,6 +209,7 @@ class HomeStaffPage extends StatelessWidget {
                           builder: (ctx, userSnap) {
                             String customerLabel =
                                 'KH: ${_shorten(customerId)}';
+
                             if (userSnap.connectionState ==
                                     ConnectionState.done &&
                                 userSnap.hasData &&
@@ -210,6 +225,7 @@ class HomeStaffPage extends StatelessWidget {
                                       .toString();
                               if (name.isNotEmpty) customerLabel = 'KH: $name';
                             }
+
                             return _loanTile(
                               context,
                               loanId: d.id,
@@ -270,7 +286,13 @@ class HomeStaffPage extends StatelessWidget {
                 icon: const Icon(Icons.logout, color: Colors.white),
                 onPressed: () async {
                   await AuthService().signOut();
-                  Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
+                  if (context.mounted) {
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      '/',
+                      (_) => false,
+                    );
+                  }
                 },
               ),
             ],

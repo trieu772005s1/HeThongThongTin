@@ -7,8 +7,12 @@ class LoanTermsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Điều khoản cho vay"),
+        title: const Text(
+          "Điều khoản cho vay",
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: const Color(0xFF1976D2),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),

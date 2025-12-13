@@ -22,35 +22,56 @@ class CardConfirmPage extends StatelessWidget {
     required this.financialMethod,
   });
 
-  Future<void> submitApplication() async {
-    final uid = FirebaseAuth.instance.currentUser!.uid;
+  Future<void> _submit(BuildContext context) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
 
-    await FirebaseFirestore.instance
-        .collection("card_applications")
-        .doc(uid)
-        .set({
-          "limit": limit,
-          "email": email,
-          "province": province,
-          "district": district,
-          "ward": ward,
-          "fullAddress": fullAddress,
-          "financialMethod": financialMethod,
-          "status": "pending",
-          "createdAt": DateTime.now(),
-        });
+    final uid = user.uid;
+    final now = FieldValue.serverTimestamp();
+
+    final batch = FirebaseFirestore.instance.batch();
+
+    // 1. Lưu hồ sơ đăng ký thẻ
+    final cardRef = FirebaseFirestore.instance
+        .collection('card_applications')
+        .doc(uid);
+
+    batch.set(cardRef, {
+      "limit": limit,
+      "email": email,
+      "province": province,
+      "district": district,
+      "ward": ward,
+      "fullAddress": fullAddress,
+      "financialMethod": financialMethod,
+      "status": "PENDING",
+      "createdAt": now,
+    });
+
+    // 2. Cập nhật trạng thái thẻ của user (QUAN TRỌNG)
+    final userRef = FirebaseFirestore.instance.collection('users').doc(uid);
+
+    batch.update(userRef, {
+      "creditCard": {"status": "PENDING", "limit": limit, "requestedAt": now},
+    });
+
+    await batch.commit();
+
+    if (context.mounted) {
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text("Xác nhận thông tin mở thẻ"),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
       ),
-
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -60,9 +81,7 @@ class CardConfirmPage extends StatelessWidget {
               "Vui lòng kiểm tra và xác nhận lại thông tin",
               style: TextStyle(fontSize: 15),
             ),
-
             const SizedBox(height: 20),
-
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
@@ -73,26 +92,21 @@ class CardConfirmPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  infoRow("Hạn mức thẻ", "$limit VND"),
-                  infoRow("Email", email),
-                  infoRow("Tỉnh / Thành phố", province),
-                  infoRow("Quận / Huyện", district),
-                  infoRow("Phường / Xã", ward),
-                  infoRow("Địa chỉ đầy đủ", fullAddress),
-                  infoRow("Hình thức chứng minh tài chính", financialMethod),
+                  _info("Hạn mức thẻ", "$limit VND"),
+                  _info("Email", email),
+                  _info("Tỉnh / Thành phố", province),
+                  _info("Quận / Huyện", district),
+                  _info("Phường / Xã", ward),
+                  _info("Địa chỉ đầy đủ", fullAddress),
+                  _info("Hình thức chứng minh tài chính", financialMethod),
                 ],
               ),
             ),
-
             const Spacer(),
-
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () async {
-                  await submitApplication();
-                  Navigator.of(context).popUntil((route) => route.isFirst);
-                },
+                onPressed: () => _submit(context),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                   padding: const EdgeInsets.symmetric(vertical: 16),
@@ -109,7 +123,7 @@ class CardConfirmPage extends StatelessWidget {
     );
   }
 
-  Widget infoRow(String title, String value) {
+  Widget _info(String title, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Column(

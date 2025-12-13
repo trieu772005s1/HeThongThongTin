@@ -161,7 +161,11 @@ class _LoanStep2_3State extends State<LoanStep2_3> {
                         'incomeProofDescription',
                       ).isEmpty;
 
-                      // combined missing flag not used; removed to satisfy lint
+                      final hasMissing =
+                          addressMissing ||
+                          jobMissing ||
+                          emergencyMissing ||
+                          incomeDocMissing;
 
                       // tên + CMND/CCCD
                       String name =
@@ -451,17 +455,14 @@ class _LoanStep2_3State extends State<LoanStep2_3> {
                 BoxShadow(
                   offset: const Offset(0, -1),
                   blurRadius: 4,
-                  color: Color.fromRGBO(0, 0, 0, 0.05),
+                  color: Colors.black.withOpacity(0.05),
                 ),
               ],
             ),
             child: Row(
               children: [
                 TextButton(
-                  onPressed: () {
-                    // TODO: bạn điều hướng ngược về các màn nhập thông tin
-                    Navigator.pop(context, false);
-                  },
+                  onPressed: () => _showEditOptions(context),
                   child: const Text(
                     'Sửa thông tin',
                     style: TextStyle(
@@ -470,6 +471,7 @@ class _LoanStep2_3State extends State<LoanStep2_3> {
                     ),
                   ),
                 ),
+
                 const Spacer(),
                 SizedBox(
                   height: 44,
@@ -584,6 +586,73 @@ class _LoanStep2_3State extends State<LoanStep2_3> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showEditOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Text(
+                  'Chọn mục cần sửa',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+              _editItem(
+                context,
+                icon: Icons.location_on_outlined,
+                title: 'Địa chỉ liên hệ',
+                route: '/loan_edit_address',
+              ),
+              _editItem(
+                context,
+                icon: Icons.attach_money_outlined,
+                title: 'Nghề nghiệp & thu nhập',
+                route: '/loan_edit_job',
+              ),
+              _editItem(
+                context,
+                icon: Icons.people_outline,
+                title: 'Người liên hệ khẩn cấp',
+                route: '/loan_edit_emergency',
+              ),
+              _editItem(
+                context,
+                icon: Icons.image_outlined,
+                title: 'Giấy tờ chứng minh thu nhập',
+                route: '/loan_edit_income_proof',
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _editItem(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String route,
+  }) {
+    return ListTile(
+      leading: Icon(icon, color: const Color(0xFF1976D2)),
+      title: Text(title),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () {
+        Navigator.pop(context);
+        Navigator.pushNamed(context, route);
+      },
     );
   }
 

@@ -3,9 +3,8 @@ import 'card_confirm_page.dart';
 
 class CardFinancialPage extends StatefulWidget {
   final int limit; // Hạn mức đã chọn
-  final String email; // Email đã nhập
-  final Map<String, dynamic>
-  addressData; // Dữ liệu địa chỉ (tỉnh, huyện, xã, ...)
+  final String email; // Email đã nhập (có thể rỗng)
+  final Map<String, dynamic> addressData; // Dữ liệu địa chỉ
 
   const CardFinancialPage({
     super.key,
@@ -21,7 +20,7 @@ class CardFinancialPage extends StatefulWidget {
 class _CardFinancialPageState extends State<CardFinancialPage> {
   String? selectedOption;
 
-  final List<String> options = [
+  final List<String> options = const [
     "Hóa đơn điện",
     "Cán bộ công chức nhà nước",
     "Theo hợp đồng bảo hiểm nhân thọ",
@@ -31,16 +30,54 @@ class _CardFinancialPageState extends State<CardFinancialPage> {
     "Mở theo số dư tài khoản ngân hàng",
   ];
 
+  bool get _addressValid {
+    final a = widget.addressData;
+    return a["province"] != null &&
+        a["district"] != null &&
+        a["ward"] != null &&
+        a["fullAddress"] != null &&
+        a["fullAddress"].toString().trim().isNotEmpty;
+  }
+
+  void _next() {
+    if (selectedOption == null) return;
+
+    if (!_addressValid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Dữ liệu địa chỉ không hợp lệ. Vui lòng nhập lại."),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CardConfirmPage(
+          limit: widget.limit,
+          email: widget.email,
+          province: widget.addressData["province"],
+          district: widget.addressData["district"],
+          ward: widget.addressData["ward"],
+          fullAddress: widget.addressData["fullAddress"],
+          financialMethod: selectedOption!,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text("Hình thức chứng minh tài chính"),
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: Colors.black,
       ),
-
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -61,36 +98,19 @@ class _CardFinancialPageState extends State<CardFinancialPage> {
                     title: Text(item),
                     value: item,
                     groupValue: selectedOption,
-                    onChanged: (value) {
-                      setState(() => selectedOption = value);
-                    },
+                    onChanged: (value) =>
+                        setState(() => selectedOption = value),
                   );
                 },
               ),
             ),
 
             const SizedBox(height: 10),
+
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: selectedOption == null
-                    ? null
-                    : () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => CardConfirmPage(
-                              limit: widget.limit,
-                              email: widget.email,
-                              province: widget.addressData["province"],
-                              district: widget.addressData["district"],
-                              ward: widget.addressData["ward"],
-                              fullAddress: widget.addressData["fullAddress"],
-                              financialMethod: selectedOption!,
-                            ),
-                          ),
-                        );
-                      },
+                onPressed: selectedOption == null ? null : _next,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: selectedOption == null
                       ? Colors.grey.shade400

@@ -19,10 +19,50 @@ class _CardAddressPageState extends State<CardAddressPage> {
   final TextEditingController addressController = TextEditingController();
 
   @override
+  void dispose() {
+    addressController.dispose();
+    super.dispose();
+  }
+
+  bool get _isValid {
+    return selectedProvince != null &&
+        selectedDistrict != null &&
+        selectedWard != null &&
+        addressController.text.trim().isNotEmpty;
+  }
+
+  void _next() {
+    if (!_isValid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vui lòng nhập đầy đủ địa chỉ'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CardFinancialPage(
+          limit: widget.limit.toInt(),
+          email: widget.email,
+          addressData: {
+            "province": selectedProvince!,
+            "district": selectedDistrict!,
+            "ward": selectedWard!,
+            "fullAddress": addressController.text.trim(),
+          },
+        ),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-
       appBar: AppBar(
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
@@ -32,13 +72,12 @@ class _CardAddressPageState extends State<CardAddressPage> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Progress bar
+            // Progress
             Container(
               height: 6,
               width: double.infinity,
@@ -47,10 +86,10 @@ class _CardAddressPageState extends State<CardAddressPage> {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: FractionallySizedBox(
-                widthFactor: 0.60, // bước 4 ~ 60%
+                widthFactor: 0.6,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Color(0xFF1976D2),
+                    color: const Color(0xFF1976D2),
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
@@ -70,15 +109,12 @@ class _CardAddressPageState extends State<CardAddressPage> {
 
             const SizedBox(height: 24),
 
-            // Province
             const Text(
               "Tỉnh/Thành phố",
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 6),
-
             _buildDropdown(
-              hint: "Chọn",
               value: selectedProvince,
               onChanged: (v) => setState(() => selectedProvince = v),
             ),
@@ -100,7 +136,6 @@ class _CardAddressPageState extends State<CardAddressPage> {
                       ),
                       const SizedBox(height: 6),
                       _buildDropdown(
-                        hint: "Chọn",
                         value: selectedDistrict,
                         onChanged: (v) => setState(() => selectedDistrict = v),
                       ),
@@ -121,7 +156,6 @@ class _CardAddressPageState extends State<CardAddressPage> {
                       ),
                       const SizedBox(height: 6),
                       _buildDropdown(
-                        hint: "Chọn",
                         value: selectedWard,
                         onChanged: (v) => setState(() => selectedWard = v),
                       ),
@@ -137,23 +171,14 @@ class _CardAddressPageState extends State<CardAddressPage> {
               "Địa chỉ chính xác",
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
-
             const SizedBox(height: 6),
-
             TextField(
               controller: addressController,
               maxLines: 2,
               decoration: InputDecoration(
-                hintText: "Nhập đầy đủ số nhà, đường...",
-                filled: true,
-                fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(
-                  vertical: 14,
-                  horizontal: 12,
-                ),
+                hintText: "Nhập số nhà, tên đường...",
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey.shade400),
                 ),
               ),
             ),
@@ -163,25 +188,10 @@ class _CardAddressPageState extends State<CardAddressPage> {
             Align(
               alignment: Alignment.bottomRight,
               child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => CardFinancialPage(
-                        limit: widget.limit.toInt(),
-                        email: widget.email,
-                        addressData: {
-                          "province": selectedProvince ?? "",
-                          "district": selectedDistrict ?? "",
-                          "ward": selectedWard ?? "",
-                          "fullAddress": addressController.text.trim(),
-                        },
-                      ),
-                    ),
-                  );
-                },
+                onPressed: _isValid ? _next : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF1976D2),
+                  backgroundColor: const Color(0xFF1976D2),
+                  disabledBackgroundColor: Colors.grey,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 30,
                     vertical: 14,
@@ -203,7 +213,6 @@ class _CardAddressPageState extends State<CardAddressPage> {
   }
 
   Widget _buildDropdown({
-    required String hint,
     required String? value,
     required void Function(String?) onChanged,
   }) {
@@ -215,10 +224,10 @@ class _CardAddressPageState extends State<CardAddressPage> {
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
-          hint: Text(hint),
+          hint: const Text("Chọn"),
           value: value,
-          icon: const Icon(Icons.keyboard_arrow_down),
-          items: [
+          isExpanded: true,
+          items: const [
             "TP.HCM",
             "Hà Nội",
             "Đà Nẵng",
