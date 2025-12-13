@@ -1,3 +1,4 @@
+import 'package:fl_credit/pages/loan_online/loan_step/steps/loan_edit_address_page.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -73,6 +74,7 @@ class MyApp extends StatelessWidget {
         '/loanDetail': (ctx) => const LoanDetailPage(),
         '/repaymentList': (ctx) => const RepaymentListPage(),
         '/loanDetail': (context) => const LoanDetailPage(),
+        '/loan_edit_address': (_) => const LoanEditAddressPage(),
 
         // Staff
         '/staffManagement': (ctx) => const StaffManagementPage(),

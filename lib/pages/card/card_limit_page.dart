@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'card_email_page.dart';
+import 'package:intl/intl.dart';
 
 class CardLimitPage extends StatefulWidget {
   const CardLimitPage({super.key});
@@ -9,11 +10,22 @@ class CardLimitPage extends StatefulWidget {
 }
 
 class _CardLimitPageState extends State<CardLimitPage> {
-  double limit = 10000000; // 10 triệu mặc định
+  static const double _min = 1_000_000;
+  static const double _max = 100_000_000;
+  static const double _step = 1_000_000;
+
+  double limit = 10_000_000;
+
+  final _currencyFormat = NumberFormat('#,###', 'vi_VN');
+
+  double _roundToStep(double value) {
+    return (value / _step).round() * _step;
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -28,7 +40,7 @@ class _CardLimitPageState extends State<CardLimitPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Progress bar
+            // Progress
             Container(
               height: 6,
               width: double.infinity,
@@ -37,7 +49,7 @@ class _CardLimitPageState extends State<CardLimitPage> {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: FractionallySizedBox(
-                widthFactor: 0.2, // bước 1
+                widthFactor: 0.2,
                 child: Container(
                   decoration: BoxDecoration(
                     color: const Color(0xFF1976D2),
@@ -67,11 +79,10 @@ class _CardLimitPageState extends State<CardLimitPage> {
 
             const SizedBox(height: 12),
 
-            // Số tiền lớn
             Row(
               children: [
                 Text(
-                  _formatMoney(limit),
+                  _currencyFormat.format(limit),
                   style: const TextStyle(
                     fontSize: 38,
                     fontWeight: FontWeight.bold,
@@ -93,27 +104,28 @@ class _CardLimitPageState extends State<CardLimitPage> {
             const SizedBox(height: 10),
 
             Slider(
-              min: 1000000,
-              max: 100000000,
+              min: _min,
+              max: _max,
+              divisions: ((_max - _min) / _step).round(),
               value: limit,
               activeColor: const Color(0xFF1976D2),
+              label: _currencyFormat.format(limit),
               onChanged: (v) {
                 setState(() {
-                  limit = v;
+                  limit = _roundToStep(v);
                 });
               },
             ),
 
             const SizedBox(height: 8),
 
-            Row(
+            const Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [Text("1.000.000 VND"), Text("100.000.000 VND")],
+              children: [Text("1.000.000 VND"), Text("100.000.000 VND")],
             ),
 
             const Spacer(),
 
-            // Nút Tiếp theo
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -142,16 +154,5 @@ class _CardLimitPageState extends State<CardLimitPage> {
         ),
       ),
     );
-  }
-
-  String _formatMoney(double amount) {
-    final s = amount.toStringAsFixed(0);
-    final buffer = StringBuffer();
-    for (int i = 0; i < s.length; i++) {
-      final idx = s.length - i;
-      buffer.write(s[i]);
-      if (idx > 1 && idx % 3 == 1) buffer.write('.');
-    }
-    return buffer.toString();
   }
 }

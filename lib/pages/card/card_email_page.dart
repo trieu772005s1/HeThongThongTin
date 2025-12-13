@@ -13,6 +13,48 @@ class _CardEmailPageState extends State<CardEmailPage> {
   final TextEditingController _emailController = TextEditingController();
 
   @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  bool _isValidEmail(String email) {
+    if (email.isEmpty) return true; // cho phép bỏ qua
+    final regex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+    return regex.hasMatch(email);
+  }
+
+  void _next() {
+    final email = _emailController.text.trim();
+
+    if (!_isValidEmail(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Email không hợp lệ'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CardAddressPage(limit: widget.limit, email: email),
+      ),
+    );
+  }
+
+  void _skip() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CardAddressPage(limit: widget.limit, email: ''),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
@@ -25,7 +67,6 @@ class _CardEmailPageState extends State<CardEmailPage> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -40,10 +81,10 @@ class _CardEmailPageState extends State<CardEmailPage> {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: FractionallySizedBox(
-                widthFactor: 0.40, // bước 3 ~ 40%
+                widthFactor: 0.4,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Color(0xFF1976D2),
+                    color: const Color(0xFF1976D2),
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
@@ -64,7 +105,7 @@ class _CardEmailPageState extends State<CardEmailPage> {
             const SizedBox(height: 12),
 
             const Text(
-              "Nhập vào địa chỉ thư điện tử của bạn để nhận được những thông tin ưu đãi nhanh nhất và mới nhất. Bạn có thể bỏ qua thông tin này.",
+              "Nhập email để nhận thông tin ưu đãi. Bạn có thể bỏ qua bước này.",
               style: TextStyle(
                 fontSize: 15,
                 color: Color(0xFF6A7A93),
@@ -87,17 +128,11 @@ class _CardEmailPageState extends State<CardEmailPage> {
 
             TextField(
               controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
               decoration: InputDecoration(
                 hintText: "example@gmail.com",
-                filled: true,
-                fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(
-                  vertical: 14,
-                  horizontal: 12,
-                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey.shade400),
                 ),
               ),
             ),
@@ -108,35 +143,16 @@ class _CardEmailPageState extends State<CardEmailPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            CardAddressPage(limit: widget.limit, email: ''),
-                      ),
-                    );
-                  },
+                  onPressed: _skip,
                   child: const Text(
                     "Bỏ qua",
                     style: TextStyle(fontSize: 16, color: Color(0xFF1976D2)),
                   ),
                 ),
-
                 ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => CardAddressPage(
-                          limit: widget.limit,
-                          email: _emailController.text,
-                        ),
-                      ),
-                    );
-                  },
+                  onPressed: _next,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF1976D2),
+                    backgroundColor: const Color(0xFF1976D2),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 30,
                       vertical: 14,
